@@ -152,12 +152,12 @@ a { text-decoration: none; }
 @keyframes album-drift { from { transform:translateX(0); } to { transform:translateX(-5%); } }
 @keyframes literary-glow { from { transform:scale(1); opacity:.25; } to { transform:scale(1.12); opacity:.5; } }
 @keyframes quote-mark-float { 0%,100% { transform:translateY(0) rotate(0deg); } 50% { transform:translateY(-10px) rotate(-3deg); } }
-.literary-card { min-height:clamp(480px, 52vw, 720px); justify-content:center; padding:clamp(62px, 9vw, 132px) clamp(38px, 10vw, 180px); border:1px solid #30302c; background:#10100f; box-shadow:0 22px 80px rgba(0,0,0,.28); }
+.literary-card { grid-column:1 / -1; min-height:clamp(480px, 52vw, 720px); justify-content:center; padding:clamp(62px, 9vw, 132px) clamp(38px, 10vw, 180px); border:1px solid #30302c; background:#10100f; box-shadow:0 22px 80px rgba(0,0,0,.28); }
 .literary-card::before { inset:26px; border-color:#292925; }
 .literary-card-top { top:34px; left:clamp(38px, 5vw, 80px); right:clamp(38px, 5vw, 80px); color:#898981; }
 .literary-card-top::before { content:''; display:block; position:absolute; top:5px; left:-22px; width:8px; height:8px; border-radius:50%; background:#b8b8ad; }
 .literary-mark { top:clamp(42px, 7vw, 92px); right:clamp(38px, 8vw, 130px); color:#34342f; font-weight:400; }
-.literary-card h2 { max-width:920px; margin:0; color:#f1f0eb; font:400 clamp(42px, 6.5vw, 102px)/.93 var(--serif); letter-spacing:-.07em; text-wrap:balance; }
+.literary-card h2 { max-width:920px; margin:0; color:#f1f0eb; font:400 clamp(42px, 6.5vw, 102px)/.93 var(--serif); letter-spacing:-.07em; text-wrap:balance; }.literary-card-quote, .literary-card-poem { width:100%; }
 .literary-body { max-width:520px; margin:34px 0 0 15%; color:#a9a9a1; font:italic clamp(19px, 2.1vw, 29px)/1.45 var(--serif); }
 .literary-card-quote { background:radial-gradient(circle at 76% 25%, rgba(207,196,163,.12), transparent 25%), #121211; }
 .literary-card-quote h2 { max-width:780px; font-size:clamp(45px, 7.3vw, 112px); }
