@@ -11,37 +11,65 @@ export class UnauthorizedError extends Error {
   }
 }
 
-async function getAuthUserId() {
+function slugFromEmail(email: string) {
+  const local = email
+    .split('@')[0]
+    ?.toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 24)
+  const base = local || 'aura'
+  const suffix = Date.now().toString(36).slice(-4)
+  return `${base}-${suffix}`
+}
+
+async function getAuthSession() {
   try {
-    const session = await auth.api.getSession({ headers: await headers() })
-    return session?.user?.id ?? null
+    return await auth.api.getSession({ headers: await headers() })
   } catch {
     return null
   }
 }
 
-export async function getSessionId() {
-  const authUserId = await getAuthUserId()
-  if (!authUserId) return null
+async function ensurePeopleForAuthUser(user: { id: string; name?: string | null; email: string }): Promise<PersonRow | null> {
   const db = getDb()
   if (!db) return null
-  const rows = await db.select({ id: people.id }).from(people).where(eq(people.userId, authUserId)).limit(1)
-  return rows[0]?.id ?? null
+  const existing = await db.select().from(people).where(eq(people.userId, user.id)).limit(1)
+  if (existing[0]) return existing[0]
+  const [created] = await db
+    .insert(people)
+    .values({
+      slug: slugFromEmail(user.email),
+      name: user.name?.trim() || user.email.split('@')[0] || 'Aura',
+      role: 'Collector',
+      location: '',
+      statement: 'A new voice in the archive.',
+      bio: 'This profile was created when the account was opened.',
+      imageKey: null,
+      accent: '06',
+      tags: ['new'],
+      links: {},
+      userId: user.id,
+    })
+    .returning()
+  return created ?? null
+}
+
+export async function getSessionUser(): Promise<PersonRow | null> {
+  const session = await getAuthSession()
+  if (!session?.user) return null
+  return ensurePeopleForAuthUser(session.user)
+}
+
+export async function getSessionId() {
+  const user = await getSessionUser()
+  return user?.id ?? null
 }
 
 export async function requireSession() {
   const userId = await getSessionId()
   if (!userId) throw new UnauthorizedError()
   return userId
-}
-
-export async function getSessionUser(): Promise<PersonRow | null> {
-  const authUserId = await getAuthUserId()
-  if (!authUserId) return null
-  const db = getDb()
-  if (!db) return null
-  const rows = await db.select().from(people).where(eq(people.userId, authUserId)).limit(1)
-  return rows[0] ?? null
 }
 
 export async function requireSessionUser(): Promise<PersonRow> {
