@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { Search, Star } from 'lucide-react'
+import { Camera, CloudSun, Search, Star, Trophy, UserRound } from 'lucide-react'
 import { feedPosts, people } from '@/lib/people'
 
 export default function Page() {
@@ -15,6 +15,7 @@ export default function Page() {
       <section className="people-feed" aria-label="Aura feed">
         {feedPosts.map((post, index) => (
           <article className={`person-row feed-post feed-post-${post.type}`} key={post.id}>
+            <div className="post-type-mark" aria-hidden="true">{post.type === 'feeling' ? <UserRound size={17} /> : post.type === 'memory' ? <Camera size={17} /> : post.type === 'achievement' ? <Trophy size={17} /> : <CloudSun size={17} />}</div>
             <Link href={`/profile/${post.authorSlug}`} className="person-image-wrap"><span className="person-aura" /><img src={post.image} alt={`${post.author} — ${post.title}`} loading={index > 1 ? 'lazy' : 'eager'} /></Link>
             <div className="person-copy"><div className="person-copy-top"><span className="post-type">{post.type}</span><span className="person-share-count">{post.date}</span></div><p className="person-role">{post.eyebrow}</p><h2>{post.title}</h2><p className="person-statement">{post.body}</p><Link href={`/profile/${post.authorSlug}`} className="post-author">{post.author}</Link><div className="person-actions"><span className="person-view-count person-view-count-action">{post.views} views</span><button className="star-button" type="button" onClick={(event) => event.preventDefault()}><Star size={14} fill="currentColor" /> <span>Star</span><strong>{post.stars}</strong></button><span className="person-share-count">{post.shares} shares</span></div></div>
           </article>
