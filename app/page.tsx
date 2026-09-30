@@ -35,6 +35,7 @@ const gallery = [
 export default function Page() {
   const [menuOpen, setMenuOpen] = useState(false)
   const [activeMemory, setActiveMemory] = useState(0)
+  const [imageLoaded, setImageLoaded] = useState(false)
 
   useEffect(() => {
     const reveal = new IntersectionObserver((entries) => {
@@ -45,6 +46,17 @@ export default function Page() {
     document.querySelectorAll('.reveal').forEach((el) => reveal.observe(el))
     return () => reveal.disconnect()
   }, [])
+
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      setActiveMemory((current) => (current + 1) % memories.length)
+    }, 5200)
+    return () => window.clearInterval(timer)
+  }, [])
+
+  useEffect(() => {
+    setImageLoaded(false)
+  }, [activeMemory])
 
   return (
     <main className="site-shell">
@@ -75,7 +87,7 @@ export default function Page() {
 
       <section className="moments section-pad"><div className="section-heading reveal"><span className="section-kicker">04 — Important moments</span><span className="heading-note">Four coordinates in an unfinished map</span></div><div className="moments-list">{moments.map((moment) => <div className="moment reveal" key={moment.year}><span className="moment-year">{moment.year}</span><div><h3>{moment.title}</h3><p>{moment.text}</p></div><ArrowUpRight className="moment-arrow" size={18} /></div>)}</div></section>
 
-      <section id="archive" className="archive section-pad"><div className="section-heading reveal"><span className="section-kicker">05 — Memory archive</span><span className="heading-note">Selected fragments / 03</span></div><div className="memory-stage"><div className="memory-visual reveal"><img src={memories[activeMemory].image} alt={memories[activeMemory].title} /><span className="memory-counter">{memories[activeMemory].number} / 03</span></div><div className="memory-details reveal"><p className="eyebrow">{memories[activeMemory].date} · {memories[activeMemory].place}</p><h2>{memories[activeMemory].title}</h2><p>{memories[activeMemory].story}</p><div className="memory-controls"><button onClick={() => setActiveMemory((activeMemory + memories.length - 1) % memories.length)} aria-label="Previous memory">←</button><button onClick={() => setActiveMemory((activeMemory + 1) % memories.length)} aria-label="Next memory">→</button></div></div></div><div className="memory-tabs">{memories.map((memory, index) => <button className={index === activeMemory ? 'active' : ''} key={memory.number} onClick={() => setActiveMemory(index)}><span>{memory.number}</span>{memory.place}</button>)}</div></section>
+      <section id="archive" className="archive section-pad"><div className="section-heading reveal"><span className="section-kicker">05 — Memory archive</span><span className="heading-note">Selected fragments / 03</span></div><div className="memory-stage"><div className={`memory-visual reveal ${imageLoaded ? 'is-loaded' : ''}`}><div className="pixel-loader" aria-hidden="true"><span>Loading memory</span></div><img key={memories[activeMemory].image} src={memories[activeMemory].image} alt={memories[activeMemory].title} onLoad={() => setImageLoaded(true)} /><span className="memory-counter">{memories[activeMemory].number} / 03</span><span className="memory-progress" aria-hidden="true"><span style={{ width: `${((activeMemory + 1) / memories.length) * 100}%` }} /></span></div><div className="memory-details reveal"><p className="eyebrow">{memories[activeMemory].date} · {memories[activeMemory].place}</p><h2>{memories[activeMemory].title}</h2><p>{memories[activeMemory].story}</p><div className="memory-controls"><button onClick={() => setActiveMemory((activeMemory + memories.length - 1) % memories.length)} aria-label="Previous memory">←</button><button onClick={() => setActiveMemory((activeMemory + 1) % memories.length)} aria-label="Next memory">→</button></div></div></div><div className="memory-tabs">{memories.map((memory, index) => <button className={index === activeMemory ? 'active' : ''} key={memory.number} onClick={() => setActiveMemory(index)}><span>{memory.number}</span>{memory.place}</button>)}</div></section>
 
       <section id="timeline" className="timeline section-pad"><div className="section-kicker reveal">06 — A life in time</div><div className="timeline-intro reveal"><h2>Everything<br /><em>leaves a trace.</em></h2><p>Some years are loud. Others are only understood later. This is the shape they make together.</p></div><div className="timeline-line">{moments.map((moment, index) => <div className={`timeline-node reveal ${index % 2 ? 'node-right' : ''}`} key={moment.year}><span className="node-year">{moment.year}</span><div className="node-dot" /><div className="node-copy"><h3>{moment.title}</h3><p>{moment.text}</p></div></div>)}</div></section>
 
