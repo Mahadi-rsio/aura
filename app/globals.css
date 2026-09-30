@@ -163,7 +163,7 @@ a { text-decoration: none; }
 .literary-card-quote h2 { max-width:780px; font-size:clamp(45px, 7.3vw, 112px); }
 .literary-card-quote .literary-body { margin-top:38px; color:#77776f; font-size:11px; letter-spacing:.14em; }
 .literary-card-quote .literary-mark { color:#77705e; }
-.literary-card-poem { background:linear-gradient(135deg, #101111, #0a0b0b); }
+.literary-card-poem { background:linear-gradient(135deg, #101111, #0a0b0b); }.literary-card-note { min-height:clamp(380px, 42vw, 560px); justify-content:flex-start; padding-top:clamp(78px, 10vw, 142px); background:#151513; }.literary-card-note::before { inset:24px 26px; border-style:dashed; border-color:#3c3c36; }.literary-card-note .literary-mark { color:#696960; font:clamp(56px, 8vw, 110px)/.7 var(--mono); }.literary-card-note h2 { max-width:680px; font:400 clamp(38px, 5vw, 76px)/.98 var(--serif); letter-spacing:-.065em; }.literary-card-note .literary-body { max-width:620px; margin:28px 0 0; font-style:normal; font-size:clamp(18px, 2vw, 26px); line-height:1.5; color:#b8b8af; }.literary-card-note .post-author { margin-left:0; margin-top:38px; }.literary-card-note .person-actions { margin-left:0; }.post-author-note img { display:none; }
 .literary-card-poem h2 { max-width:650px; font-size:clamp(40px, 5.6vw, 84px); }
 .literary-card-poem .literary-body { margin-left:18%; max-width:340px; color:#c1c1b8; }
 .literary-card-poem::after { right:-8vw; bottom:-30vw; width:52vw; height:52vw; border-color:rgba(173,190,183,.18); box-shadow:0 0 0 32px rgba(173,190,183,.045),0 0 0 64px rgba(173,190,183,.025); }
