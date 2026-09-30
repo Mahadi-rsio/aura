@@ -1,4 +1,9 @@
+// Source of truth for the seed and the no-database fallback. Every reader in
+// `lib/api.ts` falls back to these arrays when DATABASE_URL is unset, which is
+// what keeps `next build` working without a configured database.
+
 export type Person = {
+  id?: string
   slug: string
   name: string
   role: string
@@ -10,10 +15,14 @@ export type Person = {
   views: string
   stars: string
   shares: string
+  viewsCount?: number
+  starsCount?: number
+  sharesCount?: number
 }
 
 export type FeedPost = {
   id: string
+  slug?: string
   type: 'feeling' | 'memory' | 'achievement' | 'mood' | 'album' | 'quote' | 'poem' | 'note'
   images?: string[]
   author: string
@@ -26,25 +35,28 @@ export type FeedPost = {
   views: string
   stars: string
   shares: string
+  viewsCount?: number
+  starsCount?: number
+  sharesCount?: number
 }
 
 export const people: Person[] = [
-  { slug: 'alexandra-noir', name: 'Alexandra Noir', role: 'Story collector', location: 'North Atlantic', statement: 'I collect the quiet things — light on a wall, a voice remembered, the distance between who we were and who we are becoming.', image: '/images/hero-cover.png', accent: '01', tags: ['memory', 'image', 'writing'], views: '4.8k', stars: '3k', shares: '898' },
-  { slug: 'mira-sato', name: 'Mira Sato', role: 'Architect of stillness', location: 'Tokyo / 35° N', statement: 'The spaces we return to become part of our inner weather.', image: '/images/memory-city.png', accent: '02', tags: ['space', 'ritual', 'light'], views: '12k', stars: '4m', shares: '3.2k' },
-  { slug: 'elias-vale', name: 'Elias Vale', role: 'Field recorder', location: 'Lisbon / 38° N', statement: 'Every city has a frequency. I spend my days learning how to hear it.', image: '/images/memory-coast.png', accent: '03', tags: ['sound', 'travel', 'archive'], views: '898', stars: '2.4k', shares: '421' },
-  { slug: 'noor-khan', name: 'Noor Khan', role: 'Image maker', location: 'East London', statement: 'A photograph is a small room where time agrees to stay.', image: '/images/memory-studio.png', accent: '04', tags: ['portrait', 'film', 'process'], views: '6.2k', stars: '18k', shares: '1.1k' },
-  { slug: 'theo-march', name: 'Theo March', role: 'Keeper of afterthoughts', location: 'Milan / 45° N', statement: 'I am interested in the pause after the moment, when meaning starts to arrive.', image: '/images/portrait.png', accent: '05', tags: ['notes', 'fashion', 'presence'], views: '3.1k', stars: '7.8k', shares: '898' },
+  { slug: 'alexandra-noir', name: 'Alexandra Noir', role: 'Story collector', location: 'North Atlantic', statement: 'I collect the quiet things — light on a wall, a voice remembered, the distance between who we were and who we are becoming.', image: '/images/hero-cover.png', accent: '01', tags: ['memory', 'image', 'writing'], views: '4.8k', stars: '3k', shares: '898', viewsCount: 4800, starsCount: 3000, sharesCount: 898 },
+  { slug: 'mira-sato', name: 'Mira Sato', role: 'Architect of stillness', location: 'Tokyo / 35° N', statement: 'The spaces we return to become part of our inner weather.', image: '/images/memory-city.png', accent: '02', tags: ['space', 'ritual', 'light'], views: '12k', stars: '4m', shares: '3.2k', viewsCount: 12000, starsCount: 4000000, sharesCount: 3200 },
+  { slug: 'elias-vale', name: 'Elias Vale', role: 'Field recorder', location: 'Lisbon / 38° N', statement: 'Every city has a frequency. I spend my days learning how to hear it.', image: '/images/memory-coast.png', accent: '03', tags: ['sound', 'travel', 'archive'], views: '898', stars: '2.4k', shares: '421', viewsCount: 898, starsCount: 2400, sharesCount: 421 },
+  { slug: 'noor-khan', name: 'Noor Khan', role: 'Image maker', location: 'East London', statement: 'A photograph is a small room where time agrees to stay.', image: '/images/memory-studio.png', accent: '04', tags: ['portrait', 'film', 'process'], views: '6.2k', stars: '18k', shares: '1.1k', viewsCount: 6200, starsCount: 18000, sharesCount: 1100 },
+  { slug: 'theo-march', name: 'Theo March', role: 'Keeper of afterthoughts', location: 'Milan / 45° N', statement: 'I am interested in the pause after the moment, when meaning starts to arrive.', image: '/images/portrait.png', accent: '05', tags: ['notes', 'fashion', 'presence'], views: '3.1k', stars: '7.8k', shares: '898', viewsCount: 3100, starsCount: 7800, sharesCount: 898 },
 ]
 
 export const feedPosts: FeedPost[] = [
-  { id: 'feeling-01', type: 'feeling', author: 'Alexandra Noir', authorSlug: 'alexandra-noir', image: '/images/hero-cover.png', eyebrow: 'Feeling / 06:42', title: 'A little more open today.', body: 'Some mornings arrive without asking for anything. I am learning to let them.', date: 'Today', views: '4.8k', stars: '3k', shares: '898' },
-  { id: 'memory-01', type: 'memory', author: 'Mira Sato', authorSlug: 'mira-sato', image: '/images/memory-city.png', eyebrow: 'Memory / Tokyo', title: 'After the rain', body: 'The city kept its reflections long after everyone had gone home.', date: '03.2022', views: '12k', stars: '4m', shares: '3.2k' },
-  { id: 'achievement-01', type: 'achievement', author: 'Noor Khan', authorSlug: 'noor-khan', image: '/images/memory-studio.png', eyebrow: 'Achievement / 04.2026', title: 'A quiet milestone.', body: 'The first edition of my image archive is now in the hands of 200 people.', date: '04.2026', views: '6.2k', stars: '18k', shares: '1.1k' },
-  { id: 'mood-01', type: 'mood', author: 'Elias Vale', authorSlug: 'elias-vale', image: '/images/memory-coast.png', eyebrow: 'Mood / North Atlantic', title: 'Blue hour, extended.', body: 'No destination today. Just the long way around.', date: '08.2014', views: '898', stars: '2.4k', shares: '421' },
-  { id: 'album-01', type: 'album', author: 'Theo March', authorSlug: 'theo-march', image: '/images/portrait.png', images: ['/images/portrait.png', '/images/memory-studio.png', '/images/memory-city.png', '/images/memory-coast.png'], eyebrow: 'Album / four fragments', title: 'Rooms I remember', body: 'A small collection of places that stayed with me after I left.', date: '09.2026', views: '3.1k', stars: '7.8k', shares: '898' },
-  { id: 'quote-01', type: 'quote', author: 'Alexandra Noir', authorSlug: 'alexandra-noir', image: '/images/hero-cover.png', eyebrow: 'Quote / kept close', title: 'The softest things are often the ones that last.', body: '— Alexandra Noir', date: 'Now', views: '8.9k', stars: '12k', shares: '1.4k' },
-  { id: 'poem-01', type: 'poem', author: 'Elias Vale', authorSlug: 'elias-vale', image: '/images/memory-coast.png', eyebrow: 'Poem / low tide', title: 'The sea keeps no record', body: 'but I do.\nA line of light,\na door left open,\nthe sound of your name\nbecoming weather.', date: '08.2014', views: '5.6k', stars: '9.2k', shares: '702' },
-  { id: 'note-01', type: 'note', author: 'Theo March', authorSlug: 'theo-march', image: '', eyebrow: 'Note / from the desk', title: 'A note on paying attention', body: 'The day does not need to become extraordinary before it becomes worth keeping. Start with what is already here.', date: '09.2026', views: '2.7k', stars: '6.4k', shares: '318' },
+  { id: 'feeling-01', slug: 'a-little-more-open-today', type: 'feeling', author: 'Alexandra Noir', authorSlug: 'alexandra-noir', image: '/images/hero-cover.png', eyebrow: 'Feeling / 06:42', title: 'A little more open today.', body: 'Some mornings arrive without asking for anything. I am learning to let them.', date: 'Today', views: '4.8k', stars: '3k', shares: '898', viewsCount: 4800, starsCount: 3000, sharesCount: 898 },
+  { id: 'memory-01', slug: 'after-the-rain', type: 'memory', author: 'Mira Sato', authorSlug: 'mira-sato', image: '/images/memory-city.png', eyebrow: 'Memory / Tokyo', title: 'After the rain', body: 'The city kept its reflections long after everyone had gone home.', date: '03.2022', views: '12k', stars: '4m', shares: '3.2k', viewsCount: 12000, starsCount: 4000000, sharesCount: 3200 },
+  { id: 'achievement-01', slug: 'a-quiet-milestone', type: 'achievement', author: 'Noor Khan', authorSlug: 'noor-khan', image: '/images/memory-studio.png', eyebrow: 'Achievement / 04.2026', title: 'A quiet milestone.', body: 'The first edition of my image archive is now in the hands of 200 people.', date: '04.2026', views: '6.2k', stars: '18k', shares: '1.1k', viewsCount: 6200, starsCount: 18000, sharesCount: 1100 },
+  { id: 'mood-01', slug: 'blue-hour-extended', type: 'mood', author: 'Elias Vale', authorSlug: 'elias-vale', image: '/images/memory-coast.png', eyebrow: 'Mood / North Atlantic', title: 'Blue hour, extended.', body: 'No destination today. Just the long way around.', date: '08.2014', views: '898', stars: '2.4k', shares: '421', viewsCount: 898, starsCount: 2400, sharesCount: 421 },
+  { id: 'album-01', slug: 'rooms-i-remember', type: 'album', author: 'Theo March', authorSlug: 'theo-march', image: '/images/portrait.png', images: ['/images/portrait.png', '/images/memory-studio.png', '/images/memory-city.png', '/images/memory-coast.png'], eyebrow: 'Album / four fragments', title: 'Rooms I remember', body: 'A small collection of places that stayed with me after I left.', date: '09.2026', views: '3.1k', stars: '7.8k', shares: '898', viewsCount: 3100, starsCount: 7800, sharesCount: 898 },
+  { id: 'quote-01', slug: 'the-softest-things-last', type: 'quote', author: 'Alexandra Noir', authorSlug: 'alexandra-noir', image: '/images/hero-cover.png', eyebrow: 'Quote / kept close', title: 'The softest things are often the ones that last.', body: '— Alexandra Noir', date: 'Now', views: '8.9k', stars: '12k', shares: '1.4k', viewsCount: 8900, starsCount: 12000, sharesCount: 1400 },
+  { id: 'poem-01', slug: 'the-sea-keeps-no-record', type: 'poem', author: 'Elias Vale', authorSlug: 'elias-vale', image: '/images/memory-coast.png', eyebrow: 'Poem / low tide', title: 'The sea keeps no record', body: 'but I do.\nA line of light,\na door left open,\nthe sound of your name\nbecoming weather.', date: '08.2014', views: '5.6k', stars: '9.2k', shares: '702', viewsCount: 5600, starsCount: 9200, sharesCount: 702 },
+  { id: 'note-01', slug: 'a-note-on-paying-attention', type: 'note', author: 'Theo March', authorSlug: 'theo-march', image: '', eyebrow: 'Note / from the desk', title: 'A note on paying attention', body: 'The day does not need to become extraordinary before it becomes worth keeping. Start with what is already here.', date: '09.2026', views: '2.7k', stars: '6.4k', shares: '318', viewsCount: 2700, starsCount: 6400, sharesCount: 318 },
 ]
 
 export function getPerson(slug: string) {

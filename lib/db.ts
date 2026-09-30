@@ -1,15 +1,29 @@
-import { drizzle } from 'drizzle-orm/node-postgres'
-import { pgTable, text, jsonb, timestamp, uuid } from 'drizzle-orm/pg-core'
-import { Pool } from 'pg'
+import { drizzle } from 'drizzle-orm/neon-serverless'
+import { neonConfig, Pool } from '@neondatabase/serverless'
+import ws from 'ws'
+import * as schema from './schema'
 
-export const biographyContent = pgTable('biography_content', {
-  id: uuid('id').defaultRandom().primaryKey(),
-  section: text('section').notNull().unique(),
-  content: jsonb('content').$type<Record<string, unknown>>().notNull().default({}),
-  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
-})
+neonConfig.webSocketConstructor = ws
 
-const globalForDb = globalThis as unknown as { biographyPool?: Pool }
-const pool = globalForDb.biographyPool ?? new Pool({ connectionString: process.env.DATABASE_URL })
-if (process.env.NODE_ENV !== 'production') globalForDb.biographyPool = pool
-export const db = drizzle(pool)
+export type Database = ReturnType<typeof createDb> | null
+
+declare global {
+  // eslint-disable-next-line no-var
+  var auraDb: ReturnType<typeof createDb> | undefined
+}
+
+function createDb() {
+  const pool = new Pool({ connectionString: process.env.DATABASE_URL as string })
+  return drizzle(pool, { schema })
+}
+
+export function getDb() {
+  if (!process.env.DATABASE_URL) return null
+  const existing = globalThis.auraDb
+  if (existing) return existing
+  const created = createDb()
+  globalThis.auraDb = created
+  return created
+}
+
+export { schema }
