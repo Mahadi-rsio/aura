@@ -14,7 +14,8 @@ export type Person = {
 
 export type FeedPost = {
   id: string
-  type: 'feeling' | 'memory' | 'achievement' | 'mood'
+  type: 'feeling' | 'memory' | 'achievement' | 'mood' | 'album'
+  images?: string[]
   author: string
   authorSlug: string
   image: string
@@ -40,6 +41,7 @@ export const feedPosts: FeedPost[] = [
   { id: 'memory-01', type: 'memory', author: 'Mira Sato', authorSlug: 'mira-sato', image: '/images/memory-city.png', eyebrow: 'Memory / Tokyo', title: 'After the rain', body: 'The city kept its reflections long after everyone had gone home.', date: '03.2022', views: '12k', stars: '4m', shares: '3.2k' },
   { id: 'achievement-01', type: 'achievement', author: 'Noor Khan', authorSlug: 'noor-khan', image: '/images/memory-studio.png', eyebrow: 'Achievement / 04.2026', title: 'A quiet milestone.', body: 'The first edition of my image archive is now in the hands of 200 people.', date: '04.2026', views: '6.2k', stars: '18k', shares: '1.1k' },
   { id: 'mood-01', type: 'mood', author: 'Elias Vale', authorSlug: 'elias-vale', image: '/images/memory-coast.png', eyebrow: 'Mood / North Atlantic', title: 'Blue hour, extended.', body: 'No destination today. Just the long way around.', date: '08.2014', views: '898', stars: '2.4k', shares: '421' },
+  { id: 'album-01', type: 'album', author: 'Theo March', authorSlug: 'theo-march', image: '/images/portrait.png', images: ['/images/portrait.png', '/images/memory-studio.png', '/images/memory-city.png', '/images/memory-coast.png'], eyebrow: 'Album / four fragments', title: 'Rooms I remember', body: 'A small collection of places that stayed with me after I left.', date: '09.2026', views: '3.1k', stars: '7.8k', shares: '898' },
 ]
 
 export function getPerson(slug: string) {
