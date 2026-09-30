@@ -23,7 +23,7 @@ export default function Page() {
       <header className="aura-bar">
         <Link href="/" className="aura-logo">Aura<span>.</span></Link>
         <div className="aura-bar-meta"><span>People</span><span>Digital memory archive</span></div>
-        <div className="aura-bar-actions"><Link href="/create" className="create-link"><Plus size={14} /> Create</Link><Link href="/search" className="aura-search" aria-label="Search people"><Search size={16} /></Link></div>
+        <div className="aura-bar-actions"><Link href="/create" className="create-link" aria-label="Create a post"><Plus size={18} /></Link><Link href="/search" className="aura-search" aria-label="Search people"><Search size={16} /></Link><Link href="/profile" className="aura-profile-avatar" aria-label="Open your profile"><img src="/images/portrait.png" alt="Your profile" /></Link></div>
       </header>
       <section className="people-feed" aria-label="Aura feed">
         {feedPosts.map((post, index) => (
