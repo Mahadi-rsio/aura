@@ -14,7 +14,7 @@ export type Person = {
 
 export type FeedPost = {
   id: string
-  type: 'feeling' | 'memory' | 'achievement' | 'mood' | 'album'
+  type: 'feeling' | 'memory' | 'achievement' | 'mood' | 'album' | 'quote' | 'poem'
   images?: string[]
   author: string
   authorSlug: string
@@ -42,6 +42,8 @@ export const feedPosts: FeedPost[] = [
   { id: 'achievement-01', type: 'achievement', author: 'Noor Khan', authorSlug: 'noor-khan', image: '/images/memory-studio.png', eyebrow: 'Achievement / 04.2026', title: 'A quiet milestone.', body: 'The first edition of my image archive is now in the hands of 200 people.', date: '04.2026', views: '6.2k', stars: '18k', shares: '1.1k' },
   { id: 'mood-01', type: 'mood', author: 'Elias Vale', authorSlug: 'elias-vale', image: '/images/memory-coast.png', eyebrow: 'Mood / North Atlantic', title: 'Blue hour, extended.', body: 'No destination today. Just the long way around.', date: '08.2014', views: '898', stars: '2.4k', shares: '421' },
   { id: 'album-01', type: 'album', author: 'Theo March', authorSlug: 'theo-march', image: '/images/portrait.png', images: ['/images/portrait.png', '/images/memory-studio.png', '/images/memory-city.png', '/images/memory-coast.png'], eyebrow: 'Album / four fragments', title: 'Rooms I remember', body: 'A small collection of places that stayed with me after I left.', date: '09.2026', views: '3.1k', stars: '7.8k', shares: '898' },
+  { id: 'quote-01', type: 'quote', author: 'Alexandra Noir', authorSlug: 'alexandra-noir', image: '/images/hero-cover.png', eyebrow: 'Quote / kept close', title: 'The softest things are often the ones that last.', body: '— Alexandra Noir', date: 'Now', views: '8.9k', stars: '12k', shares: '1.4k' },
+  { id: 'poem-01', type: 'poem', author: 'Elias Vale', authorSlug: 'elias-vale', image: '/images/memory-coast.png', eyebrow: 'Poem / low tide', title: 'The sea keeps no record', body: 'but I do.\nA line of light,\na door left open,\nthe sound of your name\nbecoming weather.', date: '08.2014', views: '5.6k', stars: '9.2k', shares: '702' },
 ]
 
 export function getPerson(slug: string) {
