@@ -30,6 +30,8 @@ const gallery = [
   { image: '/images/memory-studio.png', alt: 'A quiet studio interior', label: 'place / 014' },
   { image: '/images/memory-coast.png', alt: 'A figure walking along the coast', label: 'distance / 021' },
   { image: '/images/memory-city.png', alt: 'Figure crossing a city at night', label: 'motion / 032' },
+  { image: '/images/hero-cover.png', alt: 'Abstract portrait cover', label: 'cover / 041' },
+  { image: '/images/memory-studio.png', alt: 'Light across the studio floor', label: 'light / 048' },
 ]
 
 export default function Page() {
@@ -95,7 +97,7 @@ export default function Page() {
 
       <section id="connect" className="connect section-pad"><div className="section-kicker reveal">08 — Stay in touch</div><div className="connect-layout"><h2 className="reveal">Let&apos;s keep<br /><em>the thread.</em></h2><div className="social-links reveal"><a href="https://instagram.com" target="_blank" rel="noreferrer">Instagram <ArrowUpRight size={15} /></a><a href="https://are.na" target="_blank" rel="noreferrer">Are.na <ArrowUpRight size={15} /></a><a href="mailto:hello@example.com">Email <ArrowUpRight size={15} /></a></div></div></section>
 
-      <footer className="footer section-pad"><span>© {new Date().getFullYear()} / Alexandra Noir</span><span>Made slowly, kept carefully.</span><a href="#top">Back to top ↑</a></footer>
+      <footer className="footer section-pad"><span>© {new Date().getFullYear()} / Alexandra Noir</span><span>Made slowly, kept carefully.</span><a href="/dashboard">Archive dashboard ↗</a><a href="#top">Back to top ↑</a></footer>
     </main>
   )
 }
