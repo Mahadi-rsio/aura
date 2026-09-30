@@ -14,7 +14,7 @@ export type Person = {
 
 export type FeedPost = {
   id: string
-  type: 'feeling' | 'memory' | 'achievement' | 'mood' | 'album' | 'quote' | 'poem'
+  type: 'feeling' | 'memory' | 'achievement' | 'mood' | 'album' | 'quote' | 'poem' | 'note'
   images?: string[]
   author: string
   authorSlug: string
@@ -44,6 +44,7 @@ export const feedPosts: FeedPost[] = [
   { id: 'album-01', type: 'album', author: 'Theo March', authorSlug: 'theo-march', image: '/images/portrait.png', images: ['/images/portrait.png', '/images/memory-studio.png', '/images/memory-city.png', '/images/memory-coast.png'], eyebrow: 'Album / four fragments', title: 'Rooms I remember', body: 'A small collection of places that stayed with me after I left.', date: '09.2026', views: '3.1k', stars: '7.8k', shares: '898' },
   { id: 'quote-01', type: 'quote', author: 'Alexandra Noir', authorSlug: 'alexandra-noir', image: '/images/hero-cover.png', eyebrow: 'Quote / kept close', title: 'The softest things are often the ones that last.', body: '— Alexandra Noir', date: 'Now', views: '8.9k', stars: '12k', shares: '1.4k' },
   { id: 'poem-01', type: 'poem', author: 'Elias Vale', authorSlug: 'elias-vale', image: '/images/memory-coast.png', eyebrow: 'Poem / low tide', title: 'The sea keeps no record', body: 'but I do.\nA line of light,\na door left open,\nthe sound of your name\nbecoming weather.', date: '08.2014', views: '5.6k', stars: '9.2k', shares: '702' },
+  { id: 'note-01', type: 'note', author: 'Theo March', authorSlug: 'theo-march', image: '', eyebrow: 'Note / from the desk', title: 'A note on paying attention', body: 'The day does not need to become extraordinary before it becomes worth keeping. Start with what is already here.', date: '09.2026', views: '2.7k', stars: '6.4k', shares: '318' },
 ]
 
 export function getPerson(slug: string) {
