@@ -25,6 +25,19 @@ export default function PersonalProfilePage() {
         <div><span>Following</span><strong>128</strong><small>lives in orbit</small></div>
         <div><span>Stars</span><strong>3.2k</strong><small>quiet appreciations</small></div>
       </section>
+      <section className="personal-profile-collections">
+        <div className="profile-section-heading"><span>Keep close</span><small>Curated rooms from your archive</small></div>
+        <div className="profile-collection-list">
+          <Link href="/create"><span>01</span><strong>Small beginnings</strong><small>12 pieces</small><ArrowUpRight size={14} /></Link>
+          <Link href="/create"><span>02</span><strong>Rooms I remember</strong><small>08 pieces</small><ArrowUpRight size={14} /></Link>
+          <Link href="/create"><span>03</span><strong>Words to return to</strong><small>05 pieces</small><ArrowUpRight size={14} /></Link>
+        </div>
+      </section>
+      <section className="personal-profile-note">
+        <span>Now</span>
+        <p>Building a softer archive for the days that move too quickly.</p>
+        <Link href="/create" className="profile-note-link">Add to your story <ArrowUpRight size={14} /></Link>
+      </section>
       <section className="personal-profile-links">
         <p>Find me elsewhere</p>
         <a href="https://instagram.com" target="_blank" rel="noreferrer"><span className="profile-link-mark">@</span> Instagram <ArrowUpRight size={14} /></a>
