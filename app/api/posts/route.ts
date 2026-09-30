@@ -1,7 +1,7 @@
 import { jsonError, jsonOk } from '@/lib/http'
 import { listPostsQuerySchema, createPostSchema } from '@/lib/validation/posts'
 import { createPost, ForbiddenError, listFeedPage } from '@/lib/api'
-import { ensureUser, getSessionId, UnauthorizedError } from '@/lib/session'
+import { getSessionId, requireSession, UnauthorizedError } from '@/lib/session'
 import { DatabaseUnavailableError } from '@/lib/db-safe'
 
 export const runtime = 'nodejs'
@@ -32,8 +32,8 @@ export async function POST(request: Request) {
   if (!parsed.success) return jsonError(422, 'That entry is not complete yet', parsed.error)
 
   try {
-    const user = await ensureUser()
-    const post = await createPost(parsed.data, user.id)
+    const authorId = await requireSession()
+    const post = await createPost(parsed.data, authorId)
     return jsonOk({ post }, 201)
   } catch (error) {
     if (error instanceof UnauthorizedError) return jsonError(401, error.message)

@@ -69,11 +69,6 @@ export async function search(q: string) {
   return response.data
 }
 
-export async function startSession() {
-  const response = await client.post<{ user: { slug: string; name: string; image: string } }>('/api/session')
-  return response.data.user
-}
-
 export async function presignUpload(file: File, onProgress?: (percent: number) => void) {
   const presigned = await client.post<{
     key: string

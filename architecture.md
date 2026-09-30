@@ -31,7 +31,7 @@ hands plain view models to client components that own interaction state.
 | View models | `lib/mappers.ts`, `lib/people.ts` | `toFeedPost(row)`, `toPerson(row)`. `people.ts` is seed data + mock fallback. |
 | Validation | `lib/validation/*.ts` | Zod. Shared verbatim by client and server. |
 | HTTP | `lib/http.ts`, `app/api/**` | `jsonError()` so every failure is `{ error, issues }`. |
-| Auth | `lib/session.ts` | HMAC-signed `aura_session` cookie → a `people` row. |
+| Auth | `lib/auth.ts`, `lib/session.ts` | Better Auth email/password → `people` via `userId`. |
 | Storage | `lib/storage.ts` | MinIO client, presign, object stream, bucket bootstrap. |
 | Client data | `lib/client-api.ts` | Axios instance + field-error mapping. |
 | State | `store/feed.ts`, `store/composer.ts` | Zustand. No provider, no hydration dance. |
@@ -66,7 +66,7 @@ row. `post_types.kind` records which branch to use: `image` for
 | `accent` | text — the `01`…`05` badge |
 | `tags` | `text[]`, default `{}` |
 | `links` | `jsonb`, default `{}` — `{ instagram, website, email }` |
-| `is_session_owner` | boolean — true for the row a session created |
+| `user_id` | text unique nullable — Better Auth `user.id` when the profile is claimed |
 | `created_at`, `updated_at` | `timestamptz` |
 
 **posts**
@@ -150,7 +150,7 @@ over after hydration, for star/share and for prepending newly created posts.
 3.  POST /api/uploads/complete  { key, mimeType, size, altText }      [zod]
         └─ inserts the media row, returns mediaId
 4.  POST /api/posts   { type, title, body, mediaIds[], ...fields }    [zod]
-        ├─ requireSession() → ensureUser() → people row
+        ├─ requireSession() → people.id for the signed-in author
         └─ transaction: insert post + post_media + post_tags
 5.  router.push('/')  → feed re-renders with the post on top
 ```
@@ -174,11 +174,11 @@ identically — `localhost:9000` is never handed to the browser.
 
 ## The session
 
-`aura_session` holds `userId.expiry.hmac`, signed with `SESSION_SECRET` via
-`node:crypto`. `ensureUser()` get-or-creates a `people` row with a generated
-handle (`aura-<base36>`), a placeholder portrait, and `is_session_owner: true`.
-No registration, no password; the cookie is the identity and `post_stars` is
-keyed on its session id.
+Better Auth owns `user` / `session` / `account` / `verification` (CLI-generated
+in `lib/auth-schema.ts`). Email/password sign-up creates a linked `people` row
+(`people.userId` → Better Auth `user.id`). `lib/session.ts` resolves
+`auth.api.getSession` to that `people` row; write paths require a signed-in
+author. Stars stay keyed on `people.id`.
 
 The admin path is separate and unchanged in spirit: `biography_admin`, an
 httpOnly cookie set by `POST /api/admin/login` against
@@ -198,7 +198,8 @@ message instead of failing obscurely.
 | variable | used by | required |
 | --- | --- | --- |
 | `DATABASE_URL` | `lib/db.ts` | for writes; reads fall back to mocks |
-| `SESSION_SECRET` | `lib/session.ts` | in production |
+| `BETTER_AUTH_SECRET` | `lib/auth.ts` | required for auth |
+| `BETTER_AUTH_URL` | `lib/auth.ts` | app origin, e.g. `http://localhost:3000` |
 | `ADMIN_PASSWORD` | `app/api/admin/login` | defaults to `369456` |
 | `MINIO_ENDPOINT` | `lib/storage.ts` | for uploads |
 | `MINIO_ACCESS_KEY_ID` | `lib/storage.ts` | for uploads |

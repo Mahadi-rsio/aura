@@ -2,8 +2,11 @@ import { drizzle } from 'drizzle-orm/neon-serverless'
 import { neonConfig, Pool } from '@neondatabase/serverless'
 import ws from 'ws'
 import * as schema from './schema'
+import * as authSchema from './auth-schema'
 
 neonConfig.webSocketConstructor = ws
+
+const fullSchema = { ...schema, ...authSchema }
 
 export type Database = ReturnType<typeof createDb> | null
 
@@ -14,7 +17,7 @@ declare global {
 
 function createDb() {
   const pool = new Pool({ connectionString: process.env.DATABASE_URL as string })
-  return drizzle(pool, { schema })
+  return drizzle(pool, { schema: fullSchema })
 }
 
 export function getDb() {

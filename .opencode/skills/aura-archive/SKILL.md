@@ -87,13 +87,14 @@ POST /api/uploads/complete   → creates the media row, returns mediaId
 Routes that touch the `minio` SDK need `export const runtime = 'nodejs'`, and
 `next.config.mjs` sets `serverExternalPackages: ['minio']`.
 
-## Auth: two unrelated cookies
+## Auth: two unrelated systems
 
-- `aura_session` — anonymous author identity, HMAC-signed with `SESSION_SECRET`
-  via `node:crypto`, holds a `userId` that owns a real `people` row. There is no
-  registration. `ensureUser()` runs inside the write handlers.
+- Better Auth email/password — `lib/auth.ts`, catch-all `app/api/auth/[...all]`,
+  schema from `pnpm dlx auth@latest generate` in `lib/auth-schema.ts`. Sign-up
+  creates a linked `people` row (`people.userId`). `lib/session.ts` maps the
+  Better Auth session to that profile for compose/star/upload.
 - `biography_admin` — the dashboard, gated on `ADMIN_PASSWORD`. Do not merge
-  these. The composer is public; the dashboard is not.
+  these. Authors sign in at `/login`; the dashboard stays separate.
 
 ## Styling is hand-written CSS
 

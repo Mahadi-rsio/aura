@@ -18,33 +18,29 @@ present only on `422`. The axios interceptor in `lib/client-api.ts` folds
 | status | meaning |
 | --- | --- |
 | `400` | malformed request, or a business rule the schema cannot express |
-| `401` | no valid `aura_session` cookie |
+| `401` | no Better Auth session |
 | `403` | authenticated but not the owner of the resource |
 | `404` | not found, or not visible to this caller |
 | `422` | Zod validation failed — see `issues` |
 | `503` | no `DATABASE_URL`, or MinIO is unreachable |
 
-**Session** — `aura_session` is an httpOnly cookie set by `POST /api/session`.
+**Session** — Better Auth email/password via `/api/auth/*` (see Better Auth docs).
 All requests need `credentials: 'include'` (axios sets this by default for
-same-origin). A session is created on first write, so reads work without one.
+same-origin). Compose, star, and upload require a signed-in user; reads work
+without one.
 
 **View models** — responses return the shapes produced by `lib/mappers.ts`, not
 Drizzle rows. See `architecture.md` for the field list.
 
 ---
 
-## Session
+## Auth
 
-### `POST /api/session`
+### `GET|POST /api/auth/[...all]`
 
-Get-or-create the current anonymous author. Idempotent: returns the same user for
-the same cookie.
-
-Request: no body.
-
-```json
-{ "user": { "id": "3f2a…", "slug": "aura-k3x9", "name": "Aura k3x9", "statement": "…", "image": "/images/portrait.png" } }
-```
+Better Auth handler (`toNextJsHandler`). Email/password sign-up and sign-in live
+here. Sign-up creates a linked `people` row (`people.userId`). Use `/login` in
+the app UI, or call `authClient.signIn.email` / `authClient.signUp.email`.
 
 ## Posts
 
@@ -72,8 +68,8 @@ component stays unchanged; the raw integers live in the row.
 
 ### `POST /api/posts`
 
-Create a post. Requires a session — `ensureUser()` runs inside the handler, so
-there is no separate registration step.
+Create a post. Requires a signed-in Better Auth session mapped to a `people`
+row (`requireSession()`).
 
 Request body, validated by the discriminated union in `lib/validation/posts.ts`:
 

@@ -20,7 +20,7 @@ Single Next.js 16 App Router app. Data layer is Drizzle over **Neon** (`DATABASE
 - `lib/api.ts` — the only module that queries. Feed/profile/search/collections readers fall back to the `lib/people.ts` mock arrays when there is no database; writes never do.
 - `lib/post-types.ts` — the closed 8-type catalog (`feeling`, `memory`, `achievement`, `mood`, `album`, `quote`, `poem`, `note`) with per-type image rules. `lib/validation/posts.ts` builds the Zod schemas from it.
 - `app/api/` — the whole backend: `session`, `posts`, `posts/[slug]` (+ `/star`, `/share`), `search`, `uploads/{presign,complete}`, `images/[...key]`, `admin/*`. The `[slug]` and `[id]` sibling segments must share one param name — **all are `[slug]`**; star/share receive the post **UUID** under that param.
-- `lib/session.ts` — stateless `aura_session` cookie (`userId.expiry.hmac`, `node:crypto` + `SESSION_SECRET`). `ensureUser()` get-or-creates a `people` row with an `aura-<base36>` slug.
+- `lib/auth.ts` / `lib/auth-schema.ts` — Better Auth email/password (CLI-generated schema). `lib/session.ts` resolves the Better Auth session to a `people` row via `people.userId`.
 - `lib/storage.ts` / `lib/storage-config.ts` — lazy MinIO client. `MINIO_ENDPOINT` starting with `https://` sets `useSSL` on port 443. `mediaUrl(media)` = `publicPath ?? /api/images/<objectKey>`.
 - `lib/seed.ts` — idempotent seed (`runSeed()`), auto-runs only when invoked directly. Re-runnable because media dedup keys on `media.sourcePath` (unique), not `publicPath` (nulled after upload), and `post_media` links are re-ensured on every run.
 - `drizzle/` — `0000_initial_aura.sql` + `0001_wide_nightcrawler.sql` (adds `media.source_path`). `meta/_journal.json` tags must match the SQL filenames.
@@ -31,7 +31,8 @@ Single Next.js 16 App Router app. Data layer is Drizzle over **Neon** (`DATABASE
 `.env.example` documents these; `.env*.local` is gitignored (**never commit live keys**).
 
 - `DATABASE_URL` — Neon pooled URL. Required for all writes; without it the app serves the `lib/people.ts` fallback.
-- `SESSION_SECRET` — HMAC key for the session cookie. Required for every write path.
+- `BETTER_AUTH_SECRET` — Better Auth signing secret. Required for sign-in/sign-up and write paths.
+- `BETTER_AUTH_URL` — public app origin (e.g. `http://localhost:3000`).
 - `ADMIN_PASSWORD` — dashboard login (`app/api/admin/login/route.ts`).
 - `MINIO_ENDPOINT`, `MINIO_ACCESS_KEY_ID`, `MINIO_SECRET_ACCESS_KEY`, `MINIO_BUCKET`, `MINIO_REGION` — S3-compatible storage. `MINIO_ENDPOINT=https://host` implies TLS/443.
 

@@ -15,9 +15,11 @@
   },
   "dependencies": {
     "@base-ui/react": "^1.5.0",
+    "@better-auth/drizzle-adapter": "^1.7.6",
     "@neondatabase/serverless": "^1.1.0",
     "@vercel/analytics": "1.6.1",
     "axios": "^1.20.0",
+    "better-auth": "^1.7.6",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "drizzle-orm": "^0.45.3",

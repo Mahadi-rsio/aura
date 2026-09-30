@@ -20,12 +20,12 @@ export default async function PersonalProfilePage() {
             <p className="profile-eyebrow">Your archive / 2026</p>
             <h1>Your<br /><em>story.</em></h1>
             <p className="personal-profile-bio">A private room for the moments, people, images, and words that make up your becoming.</p>
-            <Link href="/create" className="personal-profile-action">Create a post <ArrowUpRight size={15} /></Link>
+            <Link href="/login?next=/profile" className="personal-profile-action">Sign in to continue <ArrowUpRight size={15} /></Link>
           </div>
         </section>
         <section className="personal-profile-intro">
           <span>About this space</span>
-          <p>Your profile fills itself in the moment you publish your first entry. No registration, no password — the archive remembers you by a cookie.</p>
+          <p>Sign in with email and password to claim a profile, publish entries, and keep the pieces that usually disappear.</p>
         </section>
       </main>
     )

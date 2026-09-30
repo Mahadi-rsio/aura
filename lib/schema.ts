@@ -35,7 +35,7 @@ export const people = pgTable('people', {
   views: integer('views').notNull().default(0),
   stars: integer('stars').notNull().default(0),
   shares: integer('shares').notNull().default(0),
-  isSessionOwner: boolean('is_session_owner').notNull().default(false),
+  userId: text('user_id').unique(),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
 })

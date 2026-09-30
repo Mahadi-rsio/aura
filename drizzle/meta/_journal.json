@@ -15,6 +15,13 @@
       "when": 1790790729457,
       "tag": "0001_wide_nightcrawler",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1790792160657,
+      "tag": "0002_chemical_doctor_faustus",
+      "breakpoints": true
     }
   ]
 }
