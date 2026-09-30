@@ -69,24 +69,22 @@ export async function search(q: string) {
   return response.data
 }
 
-export async function presignUpload(file: File, onProgress?: (percent: number) => void) {
-  const presigned = await client.post<{
-    key: string
-    uploadUrl: string
-    mediaUrl: string
-    headers: Record<string, string>
-    expiresAt: string
-  }>('/api/uploads/presign', { filename: file.name, contentType: file.type, size: file.size })
+export async function uploadImage(file: File, onProgress?: (percent: number) => void) {
+  const form = new FormData()
+  form.append('file', file)
+  form.append('altText', file.name)
 
-  await axios.put(presigned.data.uploadUrl, file, {
-    headers: presigned.data.headers,
+  const response = await client.post<{ mediaId: string; url: string; key: string }>('/api/uploads', form, {
     onUploadProgress: (event) => {
       if (!onProgress || !event.total) return
       onProgress(Math.min(100, Math.round((event.loaded / event.total) * 100)))
     },
   })
+  return response.data
+}
 
-  return presigned.data
+export async function presignUpload(file: File, onProgress?: (percent: number) => void) {
+  return uploadImage(file, onProgress)
 }
 
 export async function completeUpload(key: string, contentType: string, size: number, altText?: string) {

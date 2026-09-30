@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { postTypeByName, type PostType } from '@/lib/post-types'
-import { completeUpload, createPost, presignUpload, ApiError, type FieldErrors } from '@/lib/client-api'
+import { uploadImage, createPost, ApiError, type FieldErrors } from '@/lib/client-api'
 import type { FeedPostView } from '@/lib/mappers'
 
 export type DraftMedia = {
@@ -110,21 +110,25 @@ export const useComposerStore = create<ComposerState>((set, get) => ({
       media: state.media.map((entry) => (entry.localId === localId ? { ...entry, status: 'uploading', progress: 0, error: null } : entry)),
     }))
     try {
-      const presigned = await presignUpload(item.file, (percent) => {
+      const uploaded = await uploadImage(item.file, (percent) => {
         set((state) => ({
           media: state.media.map((entry) => (entry.localId === localId ? { ...entry, progress: percent } : entry)),
         }))
       })
-      const completed = await completeUpload(presigned.key, item.file.type, item.file.size, item.file.name)
       set((state) => ({
         media: state.media.map((entry) =>
           entry.localId === localId
-            ? { ...entry, key: presigned.key, mediaId: completed.mediaId, progress: 100, status: 'done', error: null }
+            ? { ...entry, key: uploaded.key, mediaId: uploaded.mediaId, progress: 100, status: 'done', error: null }
             : entry,
         ),
       }))
     } catch (error) {
-      const message = error instanceof ApiError ? error.message : 'That image did not upload'
+      const message =
+        error instanceof ApiError
+          ? error.status === 401
+            ? 'Sign in again to upload images'
+            : error.message
+          : 'That image did not upload'
       set((state) => ({
         media: state.media.map((entry) => (entry.localId === localId ? { ...entry, status: 'error', error: message } : entry)),
       }))
