@@ -1,6 +1,6 @@
 'use client'
 
-import './dashboard.module.css'
+import './dashboard.css'
 import { FormEvent, useState } from 'react'
 import { ArrowUpRight, Check, ImagePlus, LockKeyhole, LoaderCircle, Save } from 'lucide-react'
 
