@@ -1,5 +1,3 @@
-import { initOpenNextCloudflareForDev } from '@opennextjs/cloudflare'
-
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   typescript: {
@@ -11,5 +9,3 @@ const nextConfig = {
 }
 
 export default nextConfig
-
-initOpenNextCloudflareForDev()

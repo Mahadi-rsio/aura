@@ -45,7 +45,7 @@ The UI is semantic class names in `app/globals.css` (written one rule per line, 
 
 - `app/dashboard/dashboard.module.css` was dead and has been deleted. CSS modules are not the pattern here.
 - The shadcn UI scaffolding was deleted: `components/ui/button.tsx`, `lib/utils.ts` (`cn()`), and `components.json` were unused by every page, and the `@base-ui/react`/`class-variance-authority`/`clsx`/`tailwind-merge`/`shadcn`/`tw-animate-css` deps were removed to keep the Worker bundle small. `app/globals.css` no longer imports `tw-animate-css` or `shadcn/tailwind.css` (no utility classes are used). Don't reintroduce them without checking the bundle size.
-- `next.config.mjs` sets `images.unoptimized: true` and calls `initOpenNextCloudflareForDev()`; pages use plain `<img>`, never `next/image`.
+- `next.config.mjs` sets `images.unoptimized: true`; pages use plain `<img>`, never `next/image`. It intentionally does **not** call `initOpenNextCloudflareForDev()` — the app uses no Cloudflare bindings (only env vars + Neon + S3 over fetch), and the dev helper spawns workerd and slows `pnpm dev`. Add it back only if you start reading bindings via `getCloudflareContext()`.
 - The CSS branches on `feed-post-<type>` / `literary-card-<type>`; a new type needs a matching rule or it renders unstyled.
 
 ## Adding content
