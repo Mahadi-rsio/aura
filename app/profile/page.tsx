@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { ArrowUpRight } from 'lucide-react'
+import { ArrowUpRight, Pencil } from 'lucide-react'
 import { compactCount } from '@/lib/mappers'
 import { getAuthoredPosts, getCollections, getProfileStats } from '@/lib/api'
 import { getSessionUser } from '@/lib/session'
@@ -47,7 +47,10 @@ export default async function PersonalProfilePage() {
           <p className="profile-eyebrow">Your archive / 2026</p>
           <h1>Your<br /><em>story.</em></h1>
           <p className="personal-profile-bio">{user.bio || user.statement}</p>
-          <Link href={`/profile/${person.slug}`} className="personal-profile-action">View public profile <ArrowUpRight size={15} /></Link>
+          <div className="personal-profile-actions">
+            <Link href={`/profile/${person.slug}`} className="personal-profile-action">View public profile <ArrowUpRight size={15} /></Link>
+            <Link href="/profile/edit" className="personal-profile-action">Edit profile <Pencil size={14} /></Link>
+          </div>
         </div>
       </section>
       <section className="personal-profile-intro">

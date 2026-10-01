@@ -1,4 +1,4 @@
-import { and, count, desc, eq, ilike, inArray, lt, or, sql } from 'drizzle-orm'
+import { and, asc, count, desc, eq, ilike, inArray, isNotNull, lt, or, sql } from 'drizzle-orm'
 import { requireDb, safeDb } from './db-safe'
 import {
   collectionPosts,
@@ -16,20 +16,25 @@ import {
 } from './schema'
 import { feedPosts, people as mockPeople, type FeedPost } from './people'
 import {
+  formatPostDate,
   toFeedPost,
   toMemory,
   toPerson,
+  toProfileEdit,
   toSearchPerson,
   toSearchPost,
   type FeedPostView,
   type MemoryView,
   type PostSearchResult,
   type PostTypeView,
+  type ProfileEditView,
+  type ProfileLink,
   type SearchResult,
 } from './mappers'
 import { mediaUrl } from './storage-config'
-import { postTypeSpecs } from './post-types'
+import { postTypeSpecs, type PostType } from './post-types'
 import type { CreatePostInput, ListPostsQuery, SearchQuery, UpdatePostInput } from './validation/posts'
+import type { UpdateProfileInput } from './validation/profile'
 import type { Person } from './people'
 
 export class NotFoundError extends Error {
@@ -199,6 +204,41 @@ export async function getPersonBySlug(slug: string): Promise<PersonRow | null> {
   return rows[0] ?? null
 }
 
+export async function getProfileEdit(personId: string): Promise<ProfileEditView | null> {
+  const db = safeDb()
+  if (!db) return null
+  const rows = await db.select().from(people).where(eq(people.id, personId)).limit(1)
+  return rows[0] ? toProfileEdit(rows[0]) : null
+}
+
+export async function updateProfile(personId: string, input: UpdateProfileInput, sessionId: string): Promise<ProfileEditView> {
+  const db = requireDb()
+  if (personId !== sessionId) throw new ForbiddenError('You can only edit your own profile')
+  const [existing] = await db.select({ id: people.id }).from(people).where(eq(people.id, personId)).limit(1)
+  if (!existing) throw new NotFoundError('That profile does not exist')
+
+  const links: ProfileLink[] = input.links.filter((link) => link.label && link.url)
+
+  const [updated] = await db
+    .update(people)
+    .set({
+      name: input.name,
+      role: input.role,
+      location: input.location,
+      statement: input.statement,
+      bio: input.bio,
+      accent: input.accent,
+      tags: [...new Set(input.tags)],
+      links,
+      imageKey: input.imageKey,
+      updatedAt: new Date(),
+    })
+    .where(eq(people.id, personId))
+    .returning()
+
+  return toProfileEdit(updated)
+}
+
 export async function getPostBySlug(slug: string, sessionId?: string | null): Promise<FeedPostView> {
   const db = safeDb()
   if (!db) {
@@ -315,19 +355,110 @@ export async function getGalleryImages(authorId: string, limit = 12): Promise<st
     )
     .orderBy(desc(posts.createdAt))
     .limit(limit)
-  const urls = rows.map((row) => mediaUrl(row.media))
-  return urls.length ? urls : ['/images/portrait.png']
+  return rows.map((row) => mediaUrl(row.media))
+}
+
+export async function getAuthoredPostsByType(authorId: string, types: PostType[], limit = 12): Promise<FeedPostView[]> {
+  const db = requireDb()
+  if (!types.length) return []
+  const rows = await db
+    .select()
+    .from(posts)
+    .where(
+      and(
+        eq(posts.authorId, authorId),
+        eq(posts.status, 'published'),
+        eq(posts.visibility, 'public'),
+        inArray(posts.type, types),
+      ),
+    )
+    .orderBy(desc(posts.createdAt))
+    .limit(limit)
+  const hydrated = await hydrate(db, rows)
+  return hydrated.posts
+}
+
+export async function getTopStarredPosts(authorId: string, limit = 3): Promise<FeedPostView[]> {
+  const db = requireDb()
+  const rows = await db
+    .select()
+    .from(posts)
+    .where(and(eq(posts.authorId, authorId), eq(posts.status, 'published'), eq(posts.visibility, 'public')))
+    .orderBy(desc(posts.stars), desc(posts.createdAt))
+    .limit(limit)
+  const hydrated = await hydrate(db, rows)
+  return hydrated.posts
+}
+
+export type ProfilePlaceView = { place: string; count: number }
+
+export async function getProfilePlaces(authorId: string, limit = 10): Promise<ProfilePlaceView[]> {
+  const db = requireDb()
+  const rows = await db
+    .select({ place: posts.place, total: count() })
+    .from(posts)
+    .where(
+      and(
+        eq(posts.authorId, authorId),
+        eq(posts.status, 'published'),
+        eq(posts.visibility, 'public'),
+        isNotNull(posts.place),
+      ),
+    )
+    .groupBy(posts.place)
+    .orderBy(desc(count()))
+    .limit(limit)
+  return rows
+    .map((row) => ({ place: (row.place ?? '').trim(), count: Number(row.total) }))
+    .filter((row) => row.place)
+}
+
+export type ProfileTagView = { tag: string; count: number }
+
+export async function getProfileTags(authorId: string, limit = 18): Promise<ProfileTagView[]> {
+  const db = requireDb()
+  const rows = await db
+    .select({ tag: postTags.tag, total: count() })
+    .from(postTags)
+    .innerJoin(posts, eq(posts.id, postTags.postId))
+    .where(and(eq(posts.authorId, authorId), eq(posts.status, 'published')))
+    .groupBy(postTags.tag)
+    .orderBy(desc(count()))
+    .limit(limit)
+  return rows.map((row) => ({ tag: row.tag, count: Number(row.total) }))
+}
+
+export type ProfilePeriodView = { period: string; count: number }
+
+export async function getProfilePeriods(authorId: string): Promise<ProfilePeriodView[]> {
+  const db = requireDb()
+  const rows = await db
+    .select({ createdAt: posts.createdAt })
+    .from(posts)
+    .where(and(eq(posts.authorId, authorId), eq(posts.status, 'published')))
+    .orderBy(asc(posts.createdAt))
+  const buckets = new Map<string, number>()
+  for (const row of rows) {
+    const period = String(new Date(row.createdAt).getUTCFullYear())
+    buckets.set(period, (buckets.get(period) ?? 0) + 1)
+  }
+  return [...buckets.entries()].map(([period, count]) => ({ period, count }))
 }
 
 export type ProfileStats = {
   posts: number
   stars: number
   media: number
+  shares: number
+  views: number
+  words: number
+  since: string | null
+  byType: { type: PostType; count: number }[]
 }
 
 export async function getProfileStats(authorId: string): Promise<ProfileStats> {
   const db = requireDb()
-  const [postRows, starRows, mediaRows] = await Promise.all([
+  const [postRows, starRows, mediaRows, totalsRows, typeRows, sinceRows] = await Promise.all([
     db.select({ value: count() }).from(posts).where(and(eq(posts.authorId, authorId), eq(posts.status, 'published'))),
     db.select({ value: sql<number>`coalesce(sum(${posts.stars}), 0)` }).from(posts).where(eq(posts.authorId, authorId)),
     db
@@ -335,11 +466,35 @@ export async function getProfileStats(authorId: string): Promise<ProfileStats> {
       .from(postMedia)
       .innerJoin(posts, eq(posts.id, postMedia.postId))
       .where(eq(posts.authorId, authorId)),
+    db
+      .select({
+        views: sql<number>`coalesce(sum(${posts.views}), 0)`,
+        shares: sql<number>`coalesce(sum(${posts.shares}), 0)`,
+        words: sql<number>`coalesce(sum(array_length(regexp_split_to_array(btrim(${posts.body}), '\\s+'), 1)), 0)`,
+      })
+      .from(posts)
+      .where(eq(posts.authorId, authorId)),
+    db
+      .select({ type: posts.type, value: count() })
+      .from(posts)
+      .where(and(eq(posts.authorId, authorId), eq(posts.status, 'published')))
+      .groupBy(posts.type),
+    db
+      .select({ value: posts.createdAt })
+      .from(posts)
+      .where(eq(posts.authorId, authorId))
+      .orderBy(asc(posts.createdAt))
+      .limit(1),
   ])
   return {
     posts: postRows[0]?.value ?? 0,
     stars: Number(starRows[0]?.value ?? 0),
     media: mediaRows[0]?.value ?? 0,
+    views: Number(totalsRows[0]?.views ?? 0),
+    shares: Number(totalsRows[0]?.shares ?? 0),
+    words: Number(totalsRows[0]?.words ?? 0),
+    since: sinceRows[0]?.value ? new Date(sinceRows[0].value).toISOString() : null,
+    byType: typeRows.map((row) => ({ type: row.type, count: Number(row.value) })),
   }
 }
 

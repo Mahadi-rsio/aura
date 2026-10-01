@@ -44,11 +44,11 @@ async function ensurePeopleForAuthUser(user: { id: string; name?: string | null;
       role: 'Collector',
       location: '',
       statement: 'A new voice in the archive.',
-      bio: 'This profile was created when the account was opened.',
+      bio: '',
       imageKey: null,
       accent: '06',
       tags: ['new'],
-      links: {},
+      links: [],
       userId: user.id,
     })
     .returning()

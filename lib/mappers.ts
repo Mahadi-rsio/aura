@@ -44,6 +44,69 @@ export function toPerson(row: PersonRow): Person {
   }
 }
 
+export type ProfileEditView = {
+  id: string
+  slug: string
+  name: string
+  role: string
+  location: string
+  statement: string
+  bio: string
+  accent: string
+  tags: string[]
+  links: ProfileLink[]
+  imageKey: string | null
+  image: string
+  joined: string
+}
+
+export type ProfileLink = { label: string; url: string }
+
+/**
+ * `people.links` moved from a `{ label: url }` record to a `ProfileLink[]`
+ * array so ordering is preserved. Rows written before that change still hold
+ * the record shape, so every reader normalises through here.
+ */
+export function normalizeProfileLinks(value: unknown): ProfileLink[] {
+  if (Array.isArray(value)) {
+    return value.flatMap((entry) => {
+      if (Array.isArray(entry)) {
+        const [label, url] = entry
+        return typeof label === 'string' && typeof url === 'string' ? [{ label, url }] : []
+      }
+      if (entry && typeof entry === 'object') {
+        const { label, url } = entry as Partial<ProfileLink>
+        return typeof label === 'string' && typeof url === 'string' ? [{ label, url }] : []
+      }
+      return []
+    })
+  }
+  if (value && typeof value === 'object') {
+    return Object.entries(value as Record<string, unknown>).filter(
+      (entry): entry is [string, string] => typeof entry[1] === 'string',
+    ).map(([label, url]) => ({ label, url }))
+  }
+  return []
+}
+
+export function toProfileEdit(row: PersonRow): ProfileEditView {
+  return {
+    id: row.id,
+    slug: row.slug,
+    name: row.name,
+    role: row.role,
+    location: row.location,
+    statement: row.statement,
+    bio: row.bio,
+    accent: row.accent,
+    tags: row.tags ?? [],
+    links: normalizeProfileLinks(row.links),
+    imageKey: row.imageKey,
+    image: row.imageKey ? mediaUrl({ objectKey: row.imageKey, publicPath: null }) : '/images/portrait.png',
+    joined: formatMonthYear(row.createdAt),
+  }
+}
+
 export type FeedPostView = FeedPost & {
   slug: string
   authorId: string

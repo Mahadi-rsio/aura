@@ -22,6 +22,13 @@
       "when": 1790792160657,
       "tag": "0002_chemical_doctor_faustus",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1790855064267,
+      "tag": "0003_yielding_impossible_man",
+      "breakpoints": true
     }
   ]
 }

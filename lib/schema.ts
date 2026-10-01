@@ -31,7 +31,7 @@ export const people = pgTable('people', {
   imageKey: text('image_key'),
   accent: text('accent').notNull().default('01'),
   tags: text('tags').array().notNull().default(sql`'{}'::text[]`),
-  links: jsonb('links').$type<Record<string, string>>().notNull().default(sql`'{}'::jsonb`),
+  links: jsonb('links').$type<{ label: string; url: string }[]>().notNull().default(sql`'[]'::jsonb`),
   views: integer('views').notNull().default(0),
   stars: integer('stars').notNull().default(0),
   shares: integer('shares').notNull().default(0),

@@ -1,6 +1,7 @@
 import axios, { AxiosError, type AxiosInstance } from 'axios'
-import type { FeedPostView, PostSearchResult, PostTypeView, SearchResult } from './mappers'
+import type { FeedPostView, PostSearchResult, PostTypeView, ProfileEditView, SearchResult } from './mappers'
 import type { CreatePostInput } from './validation/posts'
+import type { UpdateProfileInput } from './validation/profile'
 
 export type FieldErrors = Record<string, string>
 
@@ -17,7 +18,7 @@ export class ApiError extends Error {
   get fieldErrors(): FieldErrors {
     const map: FieldErrors = {}
     for (const issue of this.issues) {
-      const key = String(issue.path[0] ?? 'form')
+      const key = issue.path.length ? issue.path.map(String).join('.') : 'form'
       if (!map[key]) map[key] = issue.message
     }
     return map
@@ -100,6 +101,16 @@ export async function completeUpload(key: string, contentType: string, size: num
 export async function fetchPostTypes(): Promise<PostTypeView[]> {
   const { postTypeSpecs } = await import('./post-types')
   return postTypeSpecs
+}
+
+export async function fetchProfile() {
+  const response = await client.get<{ profile: ProfileEditView }>('/api/profile')
+  return response.data.profile
+}
+
+export async function updateProfile(input: UpdateProfileInput) {
+  const response = await client.patch<{ profile: ProfileEditView }>('/api/profile', input)
+  return response.data.profile
 }
 
 export { client }
