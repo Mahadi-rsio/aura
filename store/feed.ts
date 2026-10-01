@@ -1,16 +1,14 @@
 import { create } from 'zustand'
 import { compactCount, type FeedPostView } from '@/lib/mappers'
-import type { Person } from '@/lib/people'
 import * as client from '@/lib/client-api'
 
 type FeedState = {
   posts: FeedPostView[]
-  people: Person[]
   cursor: string | null
   hasMore: boolean
   loadingMore: boolean
   error: string | null
-  hydrate: (posts: FeedPostView[], people: Person[]) => void
+  hydrate: (posts: FeedPostView[]) => void
   prepend: (post: FeedPostView) => void
   loadMore: () => Promise<void>
   refresh: () => Promise<void>
@@ -24,13 +22,12 @@ function compact(posts: FeedPostView[]) {
 
 export const useFeedStore = create<FeedState>((set, get) => ({
   posts: [],
-  people: [],
   cursor: null,
   hasMore: false,
   loadingMore: false,
   error: null,
 
-  hydrate: (posts, people) => set({ posts: compact(posts), people }),
+  hydrate: (posts) => set({ posts: compact(posts) }),
 
   prepend: (post) => set((state) => ({ posts: [post, ...state.posts.filter((item) => item.id !== post.id)] })),
 

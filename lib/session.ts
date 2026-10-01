@@ -11,18 +11,6 @@ export class UnauthorizedError extends Error {
   }
 }
 
-function slugFromEmail(email: string) {
-  const local = email
-    .split('@')[0]
-    ?.toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-    .slice(0, 24)
-  const base = local || 'aura'
-  const suffix = Date.now().toString(36).slice(-4)
-  return `${base}-${suffix}`
-}
-
 async function getAuthSession() {
   try {
     return await auth.api.getSession({ headers: await headers() })
@@ -31,34 +19,17 @@ async function getAuthSession() {
   }
 }
 
-async function ensurePeopleForAuthUser(user: { id: string; name?: string | null; email: string }): Promise<PersonRow | null> {
+async function findPersonForAuthUser(userId: string): Promise<PersonRow | null> {
   const db = getDb()
   if (!db) return null
-  const existing = await db.select().from(people).where(eq(people.userId, user.id)).limit(1)
-  if (existing[0]) return existing[0]
-  const [created] = await db
-    .insert(people)
-    .values({
-      slug: slugFromEmail(user.email),
-      name: user.name?.trim() || user.email.split('@')[0] || 'Aura',
-      role: 'Collector',
-      location: '',
-      statement: 'A new voice in the archive.',
-      bio: '',
-      imageKey: null,
-      accent: '06',
-      tags: ['new'],
-      links: [],
-      userId: user.id,
-    })
-    .returning()
-  return created ?? null
+  const existing = await db.select().from(people).where(eq(people.userId, userId)).limit(1)
+  return existing[0] ?? null
 }
 
 export async function getSessionUser(): Promise<PersonRow | null> {
   const session = await getAuthSession()
   if (!session?.user) return null
-  return ensurePeopleForAuthUser(session.user)
+  return findPersonForAuthUser(session.user.id)
 }
 
 export async function getSessionId() {
