@@ -1,4 +1,3 @@
-import axios, { AxiosError, type AxiosInstance } from 'axios'
 import type { FeedPostView, PostSearchResult, PostTypeView, ProfileEditView, SearchResult } from './mappers'
 import type { CreatePostInput } from './validation/posts'
 import type { UpdateProfileInput } from './validation/profile'
@@ -25,63 +24,100 @@ export class ApiError extends Error {
   }
 }
 
-const client: AxiosInstance = axios.create({ withCredentials: true })
+type ApiBody = { error?: string; issues?: ApiError['issues'] } & Record<string, unknown>
 
-client.interceptors.response.use(
-  (response) => response,
-  (error: AxiosError<{ error?: string; issues?: ApiError['issues'] }>) => {
-    const status = error.response?.status ?? 0
-    const body = error.response?.data
-    throw new ApiError(status, body?.error || error.message || 'Something went wrong', body?.issues ?? [])
-  },
-)
+function buildQuery(params: Record<string, string | number | undefined>) {
+  const search = new URLSearchParams()
+  for (const [key, value] of Object.entries(params)) {
+    if (value === undefined || value === '') continue
+    search.set(key, String(value))
+  }
+  const query = search.toString()
+  return query ? `?${query}` : ''
+}
+
+function jsonRequest(method: string, data: unknown): RequestInit {
+  return { method, headers: { 'content-type': 'application/json' }, body: JSON.stringify(data) }
+}
+
+async function parseBody(response: Response): Promise<ApiBody | null> {
+  const text = await response.text()
+  if (!text) return null
+  try {
+    return JSON.parse(text) as ApiBody
+  } catch {
+    return null
+  }
+}
+
+async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
+  const response = await fetch(path, { credentials: 'include', ...init })
+  const body = await parseBody(response)
+  if (!response.ok) {
+    throw new ApiError(response.status, body?.error || response.statusText || 'Something went wrong', body?.issues ?? [])
+  }
+  return body as T
+}
 
 export async function listPosts(params: { limit?: number; cursor?: string; type?: string; author?: string } = {}) {
-  const response = await client.get<{ posts: FeedPostView[]; nextCursor: string | null; hasMore: boolean }>('/api/posts', { params })
-  return response.data
+  return request<{ posts: FeedPostView[]; nextCursor: string | null; hasMore: boolean }>(`/api/posts${buildQuery(params)}`)
 }
 
 export async function getPost(slug: string) {
-  const response = await client.get<{ post: FeedPostView }>(`/api/posts/${slug}`)
-  return response.data.post
+  const body = await request<{ post: FeedPostView }>(`/api/posts/${encodeURIComponent(slug)}`)
+  return body.post
 }
 
 export async function createPost(input: CreatePostInput) {
-  const response = await client.post<{ post: FeedPostView }>('/api/posts', input)
-  return response.data.post
+  const body = await request<{ post: FeedPostView }>('/api/posts', jsonRequest('POST', input))
+  return body.post
 }
 
 export async function deletePost(slug: string) {
-  await client.delete(`/api/posts/${slug}`)
+  await request(`/api/posts/${encodeURIComponent(slug)}`, { method: 'DELETE' })
 }
 
 export async function toggleStar(id: string) {
-  const response = await client.post<{ starred: boolean; stars: number }>(`/api/posts/${id}/star`)
-  return response.data
+  return request<{ starred: boolean; stars: number }>(`/api/posts/${encodeURIComponent(id)}/star`, { method: 'POST' })
 }
 
 export async function incrementShare(id: string) {
-  const response = await client.post<{ shares: number }>(`/api/posts/${id}/share`)
-  return response.data
+  return request<{ shares: number }>(`/api/posts/${encodeURIComponent(id)}/share`, { method: 'POST' })
 }
 
 export async function search(q: string) {
-  const response = await client.get<{ people: SearchResult[]; posts: PostSearchResult[] }>('/api/search', { params: { q } })
-  return response.data
+  return request<{ people: SearchResult[]; posts: PostSearchResult[] }>(`/api/search${buildQuery({ q })}`)
 }
 
-export async function uploadImage(file: File, onProgress?: (percent: number) => void) {
-  const form = new FormData()
-  form.append('file', file)
-  form.append('altText', file.name)
+export function uploadImage(file: File, onProgress?: (percent: number) => void) {
+  return new Promise<{ mediaId: string; url: string; key: string }>((resolve, reject) => {
+    const form = new FormData()
+    form.append('file', file)
+    form.append('altText', file.name)
 
-  const response = await client.post<{ mediaId: string; url: string; key: string }>('/api/uploads', form, {
-    onUploadProgress: (event) => {
-      if (!onProgress || !event.total) return
+    const xhr = new XMLHttpRequest()
+    xhr.open('POST', '/api/uploads')
+    xhr.withCredentials = true
+    xhr.upload.onprogress = (event) => {
+      if (!onProgress || !event.lengthComputable) return
       onProgress(Math.min(100, Math.round((event.loaded / event.total) * 100)))
-    },
+    }
+    xhr.onload = () => {
+      let body: ApiBody | null = null
+      try {
+        body = xhr.responseText ? (JSON.parse(xhr.responseText) as ApiBody) : null
+      } catch {
+        body = null
+      }
+      if (xhr.status >= 200 && xhr.status < 300) {
+        resolve(body as { mediaId: string; url: string; key: string })
+      } else {
+        reject(new ApiError(xhr.status, body?.error || xhr.statusText || 'Could not upload the image', body?.issues ?? []))
+      }
+    }
+    xhr.onerror = () => reject(new ApiError(0, 'Could not reach the server'))
+    xhr.send(form)
   })
-  return response.data
 }
 
 export async function presignUpload(file: File, onProgress?: (percent: number) => void) {
@@ -89,13 +125,7 @@ export async function presignUpload(file: File, onProgress?: (percent: number) =
 }
 
 export async function completeUpload(key: string, contentType: string, size: number, altText?: string) {
-  const response = await client.post<{ mediaId: string; url: string; key: string }>('/api/uploads/complete', {
-    key,
-    contentType,
-    size,
-    altText,
-  })
-  return response.data
+  return request<{ mediaId: string; url: string; key: string }>('/api/uploads/complete', jsonRequest('POST', { key, contentType, size, altText }))
 }
 
 export async function fetchPostTypes(): Promise<PostTypeView[]> {
@@ -104,13 +134,11 @@ export async function fetchPostTypes(): Promise<PostTypeView[]> {
 }
 
 export async function fetchProfile() {
-  const response = await client.get<{ profile: ProfileEditView }>('/api/profile')
-  return response.data.profile
+  const body = await request<{ profile: ProfileEditView }>('/api/profile')
+  return body.profile
 }
 
 export async function updateProfile(input: UpdateProfileInput) {
-  const response = await client.patch<{ profile: ProfileEditView }>('/api/profile', input)
-  return response.data.profile
+  const body = await request<{ profile: ProfileEditView }>('/api/profile', jsonRequest('PATCH', input))
+  return body.profile
 }
-
-export { client }

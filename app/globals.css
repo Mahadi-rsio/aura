@@ -1,7 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,500;1,400;1,500&display=swap');
 @import 'tailwindcss';
-@import 'tw-animate-css';
-@import 'shadcn/tailwind.css';
 
 :root { --ink: #f1f0eb; --paper: #090909; --muted: #858581; --line: rgba(241,240,235,.18); --serif: 'Playfair Display', Georgia, serif; --sans: 'DM Sans', Arial, sans-serif; --mono: 'DM Mono', monospace; }
 * { box-sizing: border-box; }

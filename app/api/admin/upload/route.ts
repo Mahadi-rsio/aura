@@ -24,7 +24,7 @@ export async function POST(request: Request) {
   try {
     await ensureBucket()
     const key = buildKey(file.name, file.type)
-    await putObject(key, Buffer.from(await file.arrayBuffer()), file.type)
+    await putObject(key, new Uint8Array(await file.arrayBuffer()), file.type)
 
     const db = requireDb()
     const [inserted] = await db

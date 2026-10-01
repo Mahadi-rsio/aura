@@ -1,32 +1,32 @@
+import { cache } from 'react'
 import { drizzle } from 'drizzle-orm/neon-serverless'
 import { neonConfig, Pool } from '@neondatabase/serverless'
-import ws from 'ws'
 import * as schema from './schema'
 import * as authSchema from './auth-schema'
 
-neonConfig.webSocketConstructor = ws
+if (typeof WebSocket !== 'undefined') {
+  neonConfig.webSocketConstructor = WebSocket
+}
 
 const fullSchema = { ...schema, ...authSchema }
 
 export type Database = ReturnType<typeof createDb> | null
-
-declare global {
-  // eslint-disable-next-line no-var
-  var auraDb: ReturnType<typeof createDb> | undefined
-}
 
 function createDb() {
   const pool = new Pool({ connectionString: process.env.DATABASE_URL as string })
   return drizzle(pool, { schema: fullSchema })
 }
 
+/**
+ * On Cloudflare Workers a connection pool must not be shared across requests,
+ * so the Neon pool is scoped to a single request via React's `cache`. Outside
+ * the Next.js runtime (e.g. `pnpm db:seed`) a fresh client is returned instead.
+ */
+const requestDb = cache(createDb)
+
 export function getDb() {
   if (!process.env.DATABASE_URL) return null
-  const existing = globalThis.auraDb
-  if (existing) return existing
-  const created = createDb()
-  globalThis.auraDb = created
-  return created
+  return process.env.NEXT_RUNTIME ? requestDb() : createDb()
 }
 
 export { schema }

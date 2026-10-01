@@ -52,6 +52,7 @@ export type StorageConfig = {
   secretKey: string
   region: string
   bucket: string
+  forcePathStyle: boolean
 }
 
 export function storageConfig(): StorageConfig | null {
@@ -61,6 +62,13 @@ export function storageConfig(): StorageConfig | null {
   if (!endPoint || !accessKey || !secretKey) return null
   const [host, portPart] = endPoint.includes('://') ? endPoint.replace(/^https?:\/\//, '').split(':') : endPoint.split(':')
   const useSSL = endPoint.startsWith('https://')
+  const virtualHosted =
+    host.endsWith('.r2.cloudflarestorage.com') ||
+    host.endsWith('.amazonaws.com') ||
+    /^s3[.-][a-z0-9-]+\./.test(host)
+  const forcePathStyle = process.env.MINIO_FORCE_PATH_STYLE
+    ? process.env.MINIO_FORCE_PATH_STYLE !== 'false'
+    : !virtualHosted
   return {
     endPoint: host,
     port: portPart ? Number(portPart) : useSSL ? 443 : 80,
@@ -69,5 +77,6 @@ export function storageConfig(): StorageConfig | null {
     secretKey,
     region: process.env.MINIO_REGION || 'us-east-1',
     bucket: bucketName(),
+    forcePathStyle,
   }
 }

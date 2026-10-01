@@ -3,8 +3,11 @@ pmOnFail: ignore
 minimumReleaseAgeExclude:
   - '@next/*'
   - next
+  - miniflare@5.20260930.0-alpha
+  - wrangler@4.145.0
 
 allowBuilds:
-  '@prisma/client': set this to true or false
-  better-sqlite3: set this to true or false
+  '@prisma/client': false
+  better-sqlite3: false
   esbuild: true
+  workerd: true

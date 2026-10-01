@@ -25,7 +25,7 @@ The dependency direction is fixed:
 server component ──▶ lib/api.ts ──▶ lib/db.ts ──▶ Neon
        │                                  ▲
        └──▶ view models             (server only)
-client component ──▶ lib/client-api.ts (axios) ──▶ app/api/** ──▶ lib/api.ts
+client component ──▶ lib/client-api.ts (fetch/XHR) ──▶ app/api/** ──▶ lib/api.ts
 client component ──▶ lib/validation/*  (zod, safe both sides)
 ```
 
@@ -112,8 +112,8 @@ nothing.
   `profile-eyebrow`. State classes are `is-loaded`, `is-selected`, `is-active`.
 - `app/dashboard/dashboard.css` is a separate file imported by the dashboard
   page. `app/dashboard/dashboard.module.css` is dead — nothing imports it.
-- `components/ui/button.tsx` is unused by every page. `cn()` in `lib/utils.ts`
-  exists only for it. Do not reach for either.
+- `components/ui/button.tsx`, `lib/utils.ts` (`cn()`), and `components.json`
+  were deleted as dead code. Do not recreate them.
 
 ## Verification
 
