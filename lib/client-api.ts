@@ -1,6 +1,7 @@
 import type { FeedPostView, PostSearchResult, PostTypeView, ProfileEditView, SearchResult } from './mappers'
 import type { CreatePostInput } from './validation/posts'
 import type { UpdateProfileInput } from './validation/profile'
+import type { UpdateAccountInput } from './validation/account'
 
 export type FieldErrors = Record<string, string>
 
@@ -141,4 +142,16 @@ export async function fetchProfile() {
 export async function updateProfile(input: UpdateProfileInput) {
   const body = await request<{ profile: ProfileEditView }>('/api/profile', jsonRequest('PATCH', input))
   return body.profile
+}
+
+export async function updateAccount(input: UpdateAccountInput) {
+  return request<{ name: string; nameLockedUntil: string | null }>('/api/account', jsonRequest('PATCH', input))
+}
+
+export async function toggleFollow(slug: string) {
+  return request<{ following: boolean; followersCount: number }>(`/api/people/${encodeURIComponent(slug)}/follow`, { method: 'POST' })
+}
+
+export async function disableAccount() {
+  await request('/api/account/disable', { method: 'POST' })
 }

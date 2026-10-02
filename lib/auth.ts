@@ -45,8 +45,37 @@ export const auth = betterAuth({
   emailAndPassword: {
     enabled: true,
   },
+  session: {
+    freshAge: 0,
+  },
+  user: {
+    changeEmail: {
+      enabled: true,
+      updateEmailWithoutVerification: true,
+    },
+    deleteUser: {
+      enabled: true,
+      afterDelete: async (user) => {
+        const db = getDb()
+        if (!db) return
+        await db.delete(people).where(eq(people.userId, user.id))
+      },
+    },
+  },
   plugins: [nextCookies()],
   databaseHooks: {
+    session: {
+      create: {
+        after: async (session) => {
+          const db = getDb()
+          if (!db) return
+          await db
+            .update(people)
+            .set({ disabledAt: null, updatedAt: new Date() })
+            .where(eq(people.userId, session.userId))
+        },
+      },
+    },
     user: {
       create: {
         after: async (user) => {

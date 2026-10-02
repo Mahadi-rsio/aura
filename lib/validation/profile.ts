@@ -28,7 +28,6 @@ export const profileLinkSchema = z.object({
 
 export const updateProfileSchema = z
   .object({
-    name: z.string().trim().min(1, 'A name is required').max(80, 'Name must be 80 characters or fewer'),
     role: z.string().trim().max(80, 'Role must be 80 characters or fewer'),
     location: z.string().trim().max(120, 'Location must be 120 characters or fewer'),
     statement: z.string().trim().max(280, 'Statement must be 280 characters or fewer'),

@@ -1,8 +1,9 @@
-import { and, asc, count, desc, eq, ilike, inArray, isNotNull, lt, or, sql } from 'drizzle-orm'
+import { and, asc, count, desc, eq, ilike, inArray, isNotNull, isNull, lt, notInArray, or, sql } from 'drizzle-orm'
 import { requireDb, safeDb } from './db-safe'
 import {
   collectionPosts,
   collections,
+  follows,
   media,
   people,
   postMedia,
@@ -20,11 +21,14 @@ import {
   toFeedPost,
   toMemory,
   toPerson,
+  toPersonDirectory,
+  toPersonDirectoryMock,
   toProfileEdit,
   toSearchPerson,
   toSearchPost,
   type FeedPostView,
   type MemoryView,
+  type PersonDirectoryView,
   type PostSearchResult,
   type PostTypeView,
   type ProfileEditView,
@@ -32,6 +36,7 @@ import {
   type SearchResult,
 } from './mappers'
 import { mediaUrl } from './storage-config'
+import { user as authUsers } from './auth-schema'
 import { postTypeSpecs, type PostType } from './post-types'
 import type { CreatePostInput, ListPostsQuery, SearchQuery, UpdatePostInput } from './validation/posts'
 import type { UpdateProfileInput } from './validation/profile'
@@ -49,6 +54,23 @@ export class ForbiddenError extends Error {
   constructor(message = 'You do not own this post') {
     super(message)
   }
+}
+
+export class RateLimitError extends Error {
+  readonly status = 429
+  readonly availableAt: string | null
+  constructor(message: string, availableAt: string | null = null) {
+    super(message)
+    this.availableAt = availableAt
+  }
+}
+
+export const NAME_CHANGE_COOLDOWN_MS = 3 * 24 * 60 * 60 * 1000
+
+export function nameUnlockAt(changedAt: Date | string | null | undefined): string | null {
+  if (!changedAt) return null
+  const until = new Date(changedAt).getTime() + NAME_CHANGE_COOLDOWN_MS
+  return until > Date.now() ? new Date(until).toISOString() : null
 }
 
 export function slugify(value: string) {
@@ -82,7 +104,11 @@ export async function listFeedPage(query: ListPostsQuery = { limit: 12 }, sessio
   const db = safeDb()
   if (!db) return mockFeedPage(query)
 
-  const conditions = [eq(posts.status, 'published'), eq(posts.visibility, 'public')]
+  const conditions = [
+    eq(posts.status, 'published'),
+    eq(posts.visibility, 'public'),
+    notInArray(posts.authorId, db.select({ id: people.id }).from(people).where(isNotNull(people.disabledAt))),
+  ]
   if (query.type) conditions.push(eq(posts.type, query.type))
   if (query.cursor) {
     const cursorDate = new Date(query.cursor)
@@ -193,14 +219,73 @@ function mockFeedPage(query: ListPostsQuery): FeedPage {
 export async function listPeople(): Promise<Person[]> {
   const db = safeDb()
   if (!db) return mockPeople
-  const rows = await db.select().from(people).orderBy(people.slug)
+  const rows = await db.select().from(people).where(isNull(people.disabledAt)).orderBy(people.slug)
   return rows.map(toPerson)
+}
+
+export async function listPeopleDirectory(viewerId: string | null): Promise<PersonDirectoryView[]> {
+  const db = safeDb()
+  if (!db) return mockPeople.map((person) => toPersonDirectoryMock(person))
+
+  const rows = await db.select().from(people).where(isNull(people.disabledAt)).orderBy(people.slug)
+  const ids = rows.map((row) => row.id)
+  const [countRows, followRows] = ids.length
+    ? await Promise.all([
+        db
+          .select({ followingId: follows.followingId, value: count() })
+          .from(follows)
+          .where(inArray(follows.followingId, ids))
+          .groupBy(follows.followingId),
+        viewerId
+          ? db
+              .select({ followingId: follows.followingId })
+              .from(follows)
+              .where(and(eq(follows.followerId, viewerId), inArray(follows.followingId, ids)))
+          : Promise.resolve([] as { followingId: string }[]),
+      ])
+    : [[], [] as { followingId: string }[]]
+
+  const counts = new Map(countRows.map((row) => [row.followingId, Number(row.value)]))
+  const following = new Set(followRows.map((row) => row.followingId))
+  return rows.map((row) =>
+    toPersonDirectory(row, {
+      followersCount: counts.get(row.id) ?? 0,
+      following: following.has(row.id),
+      isSelf: row.id === viewerId,
+    }),
+  )
+}
+
+export async function toggleFollow(slug: string, viewerId: string): Promise<{ following: boolean; followersCount: number }> {
+  const db = requireDb()
+  const [target] = await db
+    .select({ id: people.id })
+    .from(people)
+    .where(and(eq(people.slug, slug), isNull(people.disabledAt)))
+    .limit(1)
+  if (!target) throw new NotFoundError('That profile does not exist')
+  if (target.id === viewerId) throw new ForbiddenError('You cannot follow yourself')
+
+  const existing = await db
+    .select({ followerId: follows.followerId })
+    .from(follows)
+    .where(and(eq(follows.followerId, viewerId), eq(follows.followingId, target.id)))
+    .limit(1)
+
+  if (existing.length) {
+    await db.delete(follows).where(and(eq(follows.followerId, viewerId), eq(follows.followingId, target.id)))
+  } else {
+    await db.insert(follows).values({ followerId: viewerId, followingId: target.id }).onConflictDoNothing()
+  }
+
+  const [total] = await db.select({ value: count() }).from(follows).where(eq(follows.followingId, target.id))
+  return { following: existing.length === 0, followersCount: Number(total?.value ?? 0) }
 }
 
 export async function getPersonBySlug(slug: string): Promise<PersonRow | null> {
   const db = safeDb()
   if (!db) return null
-  const rows = await db.select().from(people).where(eq(people.slug, slug)).limit(1)
+  const rows = await db.select().from(people).where(and(eq(people.slug, slug), isNull(people.disabledAt))).limit(1)
   return rows[0] ?? null
 }
 
@@ -222,7 +307,6 @@ export async function updateProfile(personId: string, input: UpdateProfileInput,
   const [updated] = await db
     .update(people)
     .set({
-      name: input.name,
       role: input.role,
       location: input.location,
       statement: input.statement,
@@ -237,6 +321,28 @@ export async function updateProfile(personId: string, input: UpdateProfileInput,
     .returning()
 
   return toProfileEdit(updated)
+}
+
+export type AccountView = { name: string; nameLockedUntil: string | null }
+
+export async function updateAccountName(personId: string, name: string): Promise<AccountView> {
+  const db = requireDb()
+  const [person] = await db.select().from(people).where(eq(people.id, personId)).limit(1)
+  if (!person) throw new NotFoundError('That profile does not exist')
+
+  const trimmed = name.trim()
+  const lockedUntil = nameUnlockAt(person.nameChangedAt)
+  if (trimmed === person.name) return { name: person.name, nameLockedUntil: lockedUntil }
+  if (lockedUntil) {
+    throw new RateLimitError('You can only change your name once every three days.', lockedUntil)
+  }
+
+  const now = new Date()
+  await db.update(people).set({ name: trimmed, nameChangedAt: now, updatedAt: now }).where(eq(people.id, personId))
+  if (person.userId) {
+    await db.update(authUsers).set({ name: trimmed, updatedAt: now }).where(eq(authUsers.id, person.userId))
+  }
+  return { name: trimmed, nameLockedUntil: nameUnlockAt(now) }
 }
 
 export async function getPostBySlug(slug: string, sessionId?: string | null): Promise<FeedPostView> {
@@ -280,11 +386,16 @@ export async function getPostBySlug(slug: string, sessionId?: string | null): Pr
     sessionId ? db.select({ postId: postStars.postId }).from(postStars).where(and(eq(postStars.postId, post.id), eq(postStars.sessionId, sessionId))) : Promise.resolve([]),
   ])
 
+  const author = authorRows[0]
+  if (author?.disabledAt && post.authorId !== sessionId) {
+    throw new NotFoundError('That entry does not exist')
+  }
+
   await db.update(posts).set({ views: sql`${posts.views} + 1` }).where(eq(posts.id, post.id))
 
   return toFeedPost(
     post,
-    authorRows[0],
+    author,
     mediaRows.map((row) => row.media),
     tagRows.map((row) => row.tag),
     starRows.length > 0,
@@ -571,11 +682,14 @@ export async function searchAll(query: SearchQuery): Promise<{ people: SearchRes
       .select()
       .from(people)
       .where(
-        or(
-          ilike(people.name, pattern),
-          ilike(people.role, pattern),
-          ilike(people.location, pattern),
-          ilike(people.statement, pattern),
+        and(
+          isNull(people.disabledAt),
+          or(
+            ilike(people.name, pattern),
+            ilike(people.role, pattern),
+            ilike(people.location, pattern),
+            ilike(people.statement, pattern),
+          ),
         ),
       )
       .limit(query.limit),
@@ -586,6 +700,7 @@ export async function searchAll(query: SearchQuery): Promise<{ people: SearchRes
         and(
           eq(posts.status, 'published'),
           eq(posts.visibility, 'public'),
+          notInArray(posts.authorId, db.select({ id: people.id }).from(people).where(isNotNull(people.disabledAt))),
           or(ilike(posts.title, pattern), ilike(posts.body, pattern), ilike(posts.eyebrow, pattern)),
         ),
       )

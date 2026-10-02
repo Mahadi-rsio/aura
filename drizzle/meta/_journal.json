@@ -29,6 +29,20 @@
       "when": 1790855064267,
       "tag": "0003_yielding_impossible_man",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1790901654610,
+      "tag": "0004_fair_goliath",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1790902863767,
+      "tag": "0005_strong_speed_demon",
+      "breakpoints": true
     }
   ]
 }

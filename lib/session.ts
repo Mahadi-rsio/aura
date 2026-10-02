@@ -26,10 +26,17 @@ async function findPersonForAuthUser(userId: string): Promise<PersonRow | null> 
   return existing[0] ?? null
 }
 
+export async function getAuthUser() {
+  const session = await getAuthSession()
+  return session?.user ?? null
+}
+
 export async function getSessionUser(): Promise<PersonRow | null> {
   const session = await getAuthSession()
   if (!session?.user) return null
-  return findPersonForAuthUser(session.user.id)
+  const person = await findPersonForAuthUser(session.user.id)
+  if (person?.disabledAt) return null
+  return person
 }
 
 export async function getSessionId() {

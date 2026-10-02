@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { ArrowLeft, ArrowUpRight, Search, X } from 'lucide-react'
 import { ApiError, search } from '@/lib/client-api'
 import type { PostSearchResult, SearchResult } from '@/lib/mappers'
+import AuraLoader from '@/components/aura-loader'
 
 type Results = { people: SearchResult[]; posts: PostSearchResult[] }
 
@@ -72,7 +73,7 @@ export default function SearchPage() {
         <span>{idle ? 'Archive' : `${total} traces`}</span>
       </section>
       <section className="search-results" aria-live="polite">
-        {loading && <div className="post-skeleton-list" aria-hidden="true"><div className="post-skeleton"><span /><span /><span /></div><div className="post-skeleton"><span /><span /><span /></div></div>}
+        {loading && <div className="search-loading"><AuraLoader variant="inline" size="md" text={['Searching', 'Finding traces']} /></div>}
         {!loading && results.people.length > 0 && <div className="result-group"><div className="result-heading"><span>People</span><span>{results.people.length.toString().padStart(2, '0')}</span></div><div className="people-results">{results.people.map((person) => <Link href={`/profile/${person.slug}`} className="search-person" key={person.slug}><div className="search-person-image"><img src={person.image} alt="" /></div><div><span>{person.role} / {person.location}</span><h2>{person.name}</h2><p>{person.statement}</p></div><ArrowUpRight size={17} /></Link>)}</div></div>}
         {!loading && results.posts.length > 0 && <div className="result-group"><div className="result-heading"><span>Notes & memories</span><span>{results.posts.length.toString().padStart(2, '0')}</span></div><div className="post-results">{results.posts.map((post) => <Link href={`/post/${post.slug}`} className={`search-post search-post-${post.type}`} key={post.id}><div><span>{post.type} / {post.date}</span><h2>{post.title}</h2><p>{post.author} — {post.body.split('\n')[0]}</p></div><ArrowUpRight size={17} /></Link>)}</div></div>}
         {!loading && !idle && total === 0 && <div className="search-empty"><span>Nothing found</span><h2>Try a softer word.</h2><p>Search by name, place, feeling, or memory.</p></div>}

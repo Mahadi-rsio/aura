@@ -36,6 +36,8 @@ export const people = pgTable('people', {
   stars: integer('stars').notNull().default(0),
   shares: integer('shares').notNull().default(0),
   userId: text('user_id').unique(),
+  disabledAt: timestamp('disabled_at', { withTimezone: true }),
+  nameChangedAt: timestamp('name_changed_at', { withTimezone: true }),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
 })
@@ -138,6 +140,23 @@ export const postStars = pgTable(
   (table) => [primaryKey({ columns: [table.postId, table.sessionId] })],
 )
 
+export const follows = pgTable(
+  'follows',
+  {
+    followerId: uuid('follower_id')
+      .notNull()
+      .references(() => people.id, { onDelete: 'cascade' }),
+    followingId: uuid('following_id')
+      .notNull()
+      .references(() => people.id, { onDelete: 'cascade' }),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    primaryKey({ columns: [table.followerId, table.followingId] }),
+    index('follows_following_id_idx').on(table.followingId),
+  ],
+)
+
 export const collections = pgTable(
   'collections',
   {
@@ -178,3 +197,4 @@ export type PostRow = typeof posts.$inferSelect
 export type MediaRow = typeof media.$inferSelect
 export type PostTypeRow = typeof postTypes.$inferSelect
 export type CollectionRow = typeof collections.$inferSelect
+export type FollowRow = typeof follows.$inferSelect

@@ -1,0 +1,1 @@
+ALTER TABLE "people" ADD COLUMN "disabled_at" timestamp with time zone;

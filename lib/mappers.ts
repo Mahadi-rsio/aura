@@ -44,6 +44,60 @@ export function toPerson(row: PersonRow): Person {
   }
 }
 
+export type PersonDirectoryView = {
+  id: string
+  slug: string
+  name: string
+  role: string
+  location: string
+  statement: string
+  image: string
+  accent: string
+  tags: string[]
+  followers: string
+  followersCount: number
+  following: boolean
+  isSelf: boolean
+}
+
+type DirectoryOptions = { followersCount?: number; following?: boolean; isSelf?: boolean }
+
+export function toPersonDirectory(row: PersonRow, { followersCount = 0, following = false, isSelf = false }: DirectoryOptions = {}): PersonDirectoryView {
+  return {
+    id: row.id,
+    slug: row.slug,
+    name: row.name,
+    role: row.role,
+    location: row.location,
+    statement: row.statement,
+    image: row.imageKey ? mediaUrl({ objectKey: row.imageKey, publicPath: null }) : '/images/portrait.png',
+    accent: row.accent,
+    tags: row.tags ?? [],
+    followers: compactCount(followersCount),
+    followersCount,
+    following,
+    isSelf,
+  }
+}
+
+export function toPersonDirectoryMock(person: Person, { followersCount = 0, following = false, isSelf = false }: DirectoryOptions = {}): PersonDirectoryView {
+  return {
+    id: person.id ?? person.slug,
+    slug: person.slug,
+    name: person.name,
+    role: person.role,
+    location: person.location,
+    statement: person.statement,
+    image: person.image,
+    accent: person.accent,
+    tags: person.tags,
+    followers: compactCount(followersCount),
+    followersCount,
+    following,
+    isSelf,
+  }
+}
+
 export type ProfileEditView = {
   id: string
   slug: string

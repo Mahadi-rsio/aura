@@ -20,7 +20,6 @@ function initialAccent(value: string): Accent {
 export default function EditProfileClient({ profile }: { profile: ProfileEditView }) {
   const router = useRouter()
   const fileInput = useRef<HTMLInputElement>(null)
-  const [name, setName] = useState(profile.name)
   const [role, setRole] = useState(profile.role)
   const [location, setLocation] = useState(profile.location)
   const [statement, setStatement] = useState(profile.statement)
@@ -80,7 +79,6 @@ export default function EditProfileClient({ profile }: { profile: ProfileEditVie
     setFormError(null)
     try {
       const next = await updateProfile({
-        name,
         role,
         location,
         statement,
@@ -161,27 +159,21 @@ export default function EditProfileClient({ profile }: { profile: ProfileEditVie
         </div>
 
         <div className="create-fields">
-          <label className="create-field">
-            <span className="edit-split-label">02 / Name <em>{name.length}/80</em></span>
-            <input value={name} onChange={(event) => { setName(event.target.value); setSaved(false) }} placeholder="How should we address you?" required maxLength={80} />
-            {fieldErrors.name && <p className="create-error">{fieldErrors.name}</p>}
-          </label>
-
           <div className="create-split">
             <label className="create-field">
-              <span>03 / Role</span>
+              <span>02 / Role</span>
               <input value={role} onChange={(event) => { setRole(event.target.value); setSaved(false) }} placeholder="What you do" maxLength={80} />
               {fieldErrors.role && <p className="create-error">{fieldErrors.role}</p>}
             </label>
             <label className="create-field">
-              <span>04 / Location</span>
+              <span>03 / Location</span>
               <input value={location} onChange={(event) => { setLocation(event.target.value); setSaved(false) }} placeholder="Where you are" maxLength={120} />
               {fieldErrors.location && <p className="create-error">{fieldErrors.location}</p>}
             </label>
           </div>
 
           <label className="create-field">
-            <span className="edit-split-label">05 / Statement <em>{statement.length}/280</em></span>
+            <span className="edit-split-label">04 / Statement <em>{statement.length}/280</em></span>
             <textarea
               value={statement}
               onChange={(event) => { setStatement(event.target.value); setSaved(false) }}
@@ -193,7 +185,7 @@ export default function EditProfileClient({ profile }: { profile: ProfileEditVie
           </label>
 
           <label className="create-field">
-            <span className="edit-split-label">06 / Biography <em>{bio.length}/4000</em></span>
+            <span className="edit-split-label">05 / Biography <em>{bio.length}/4000</em></span>
             <textarea
               value={bio}
               onChange={(event) => { setBio(event.target.value); setSaved(false) }}
@@ -205,7 +197,7 @@ export default function EditProfileClient({ profile }: { profile: ProfileEditVie
           </label>
 
           <div className="create-field">
-            <span>07 / Accent</span>
+            <span>06 / Accent</span>
             <div className="type-grid">
               {profileAccents.map((value) => (
                 <button key={value} type="button" className={accent === value ? 'is-selected' : ''} onClick={() => { setAccent(value); setSaved(false) }}>
@@ -217,7 +209,7 @@ export default function EditProfileClient({ profile }: { profile: ProfileEditVie
           </div>
 
           <label className="create-field">
-            <span>08 / Tags</span>
+            <span>07 / Tags</span>
             <input value={tags} onChange={(event) => { setTags(event.target.value); setSaved(false) }} placeholder="memory, light, slow" />
             <span className="create-status">Comma separated · up to 12</span>
             {fieldErrors.tags && <p className="create-error">{fieldErrors.tags}</p>}
@@ -225,7 +217,7 @@ export default function EditProfileClient({ profile }: { profile: ProfileEditVie
         </div>
 
         <div className="create-field edit-links-field">
-          <span>09 / Elsewhere</span>
+          <span>08 / Elsewhere</span>
           <div className="edit-links">
             {links.map((row, index) => (
               <div className="edit-link-row" key={index}>
